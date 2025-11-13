@@ -10,10 +10,11 @@
 
 class ParticularDiagramBuilder{
     std::shared_ptr<ScMemoryContext> context;
-
+    std::shared_ptr<utils::ScLogger> m_logger;
     public:
     ParticularDiagramBuilder(){
         context=std::make_shared<ScMemoryContext>();
+        m_logger=std::make_shared<utils::ScLogger>();
     }
     virtual void ProcessNode(ScAddr Node);
     virtual void ProcessEdgesByNode(ScAddr Node);
@@ -25,5 +26,8 @@ class ParticularDiagramBuilder{
     
     std::shared_ptr<ScMemoryContext> GetContext(){
         return context;
+    }
+    std::shared_ptr<utils::ScLogger> GetLogger(){
+        return m_logger;
     }
 };
