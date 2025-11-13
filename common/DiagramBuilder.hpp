@@ -3,5 +3,5 @@
 #include "ParticularDiagramBuilder.hpp"
  class DiagramBuilder{
     public:
-    ScAddrSet generateStructure(ParticularDiagramBuilder* builder,ScAddr diagram);
+    std::shared_ptr<ScAddrSet> generateStructure(ParticularDiagramBuilder* builder,ScAddr diagram);
 };

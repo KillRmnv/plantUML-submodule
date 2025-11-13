@@ -16,10 +16,11 @@ class ParticularDiagramBuilder{
         context=std::make_shared<ScMemoryContext>();
     }
     virtual void ProcessNode(ScAddr Node);
-    virtual void ProcessEdgesByNode(ScAddr Node,ScAddrSet unusedEdges);
+    virtual void ProcessEdgesByNode(ScAddr Node);
     virtual void ProcessAdjacentNodes(ScAddr Node);
-    virtual ScAddrSet GetAllPackages(ScAddr diagram);
-    virtual ScAddrSet GetUsedNodes(ScAddr diagram);
+    virtual void ProcessUnusedEdges(ScAddr package,std::shared_ptr<ScAddrSet>);
+    virtual std::shared_ptr<ScAddrSet> GetAllPackages(ScAddr diagram);
+    virtual std::shared_ptr<ScAddrSet> GetUsedNodes(ScAddr diagram);
     virtual std::string GetResultString();
     
     std::shared_ptr<ScMemoryContext> GetContext(){
