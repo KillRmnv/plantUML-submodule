@@ -4,11 +4,11 @@
  * (See accompanying file COPYING.MIT or copy at http://opensource.org/licenses/MIT)
  */
 
-#include "exampleModule.hpp"
+#include "erDiagramModule.hpp"
 
 
-#include "agents/ExampleInferenceAgent.hpp"
+#include "agents/ErDiagramAgent.hpp"
 
-SC_MODULE_REGISTER(ExampleModule)
+SC_MODULE_REGISTER(erDiagramModule)
 
-    ->Agent<ExampleInferenceAgent>();
+    ->Agent<ErDiagramAgent>();
