@@ -13,5 +13,4 @@ class Keynodes : public ScKeynodes
 {
 public:
   static inline ScKeynode const action_generate_state_diagram{"action_generate_state_diagram", ScType::ConstNodeClass};
-
 };

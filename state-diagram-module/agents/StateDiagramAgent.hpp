@@ -8,10 +8,10 @@
 
 #include <sc-memory/sc_agent.hpp>
 
-class ExampleInferenceAgent : public ScActionInitiatedAgent
+class StateDiagramAgent : public ScActionInitiatedAgent
 {
 public:
-  ExampleInferenceAgent();
+  StateDiagramAgent();
 
   ScAddr GetActionClass() const override;
 

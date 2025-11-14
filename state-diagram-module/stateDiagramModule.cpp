@@ -4,10 +4,11 @@
  * (See accompanying file COPYING.MIT or copy at http://opensource.org/licenses/MIT)
  */
 
-#pragma once
+#include "stateDiagramModule.hpp"
 
-#include <sc-memory/sc_module.hpp>
 
-class ExampleModule : public ScModule
-{
-};
+#include "agents/StateDiagramAgent.hpp"
+
+SC_MODULE_REGISTER(StateDiagramModule)
+
+    ->Agent<StateDiagramAgent>();

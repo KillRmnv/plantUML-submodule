@@ -2,13 +2,19 @@
 #include <sc-memory/sc_addr.hpp>
 #include <memory>
 #include <sc-agents-common/utils/IteratorUtils.hpp>
+#include <string>
 #include <sc-memory/sc_agent.hpp>
 #include <sc-memory/sc_agent_context.hpp>
 #include <sc-memory/sc_memory.hpp>
 
-
-
 class ParticularDiagramBuilder{
+    protected:
+    ScAddrSet usedNodes;
+    ScAddrSet usedEdges;
+    ScAddrToValueUnorderedMap<std::string> map;
+    std::string conditions;
+    std::string entities;
+    std::string relations;
     std::shared_ptr<ScMemoryContext> context;
     std::shared_ptr<utils::ScLogger> m_logger;
     public:
@@ -23,11 +29,13 @@ class ParticularDiagramBuilder{
     virtual std::shared_ptr<ScAddrSet> GetAllPackages(ScAddr diagram);
     virtual std::shared_ptr<ScAddrSet> GetUsedNodes(ScAddr diagram);
     virtual std::string GetResultString();
-    
+    virtual void SavePackage();
+
     std::shared_ptr<ScMemoryContext> GetContext(){
         return context;
     }
     std::shared_ptr<utils::ScLogger> GetLogger(){
         return m_logger;
     }
+
 };

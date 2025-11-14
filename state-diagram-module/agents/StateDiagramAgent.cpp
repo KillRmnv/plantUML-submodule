@@ -4,7 +4,7 @@
  * COPYING.MIT or copy at http://opensource.org/licenses/MIT)
  */
 
-#include "ExampleInferenceAgent.hpp"
+#include "StateDiagramAgent.hpp"
 
 
 #include <sc-agents-common/utils/IteratorUtils.hpp>
@@ -12,13 +12,13 @@
 #include "keynodes/Keynodes.hpp"
 
 
-ExampleInferenceAgent::ExampleInferenceAgent()
+StateDiagramAgent::StateDiagramAgent()
 {
   m_logger =
-      utils::ScLogger(utils::ScLogger::ScLogType::File, "logs/ExampleInferenceAgent.log", utils::ScLogLevel::Debug);
+      utils::ScLogger(utils::ScLogger::ScLogType::File, "logs/StateDiagramAgent.log", utils::ScLogLevel::Debug);
 }
 
-ScResult ExampleInferenceAgent::DoProgram(ScActionInitiatedEvent const & event, ScAction & action)
+ScResult StateDiagramAgent::DoProgram(ScActionInitiatedEvent const & event, ScAction & action)
 {
   auto const [targetStructure, formulasSet, arguments, inputStructure] = action.GetArguments<4>();
 
@@ -34,7 +34,7 @@ ScResult ExampleInferenceAgent::DoProgram(ScActionInitiatedEvent const & event, 
   return action.FinishSuccessfully();
 }
 
-ScAddr ExampleInferenceAgent::GetActionClass() const
+ScAddr StateDiagramAgent::GetActionClass() const
 {
   return Keynodes::action_generate_state_diagram;
 }
