@@ -4,7 +4,7 @@
  * COPYING.MIT or copy at http://opensource.org/licenses/MIT)
  */
 
-#include "ExampleInferenceAgent.hpp"
+#include "ErDiagramAgent.hpp"
 
 
 #include <sc-agents-common/utils/IteratorUtils.hpp>
@@ -12,7 +12,7 @@
 #include "keynodes/Keynodes.hpp"
 
 
-ExampleInferenceAgent::ExampleInferenceAgent()
+ErDiagramAgent::ErDiagramAgent()
 {
   m_logger =
       utils::ScLogger(utils::ScLogger::ScLogType::File, "logs/ExampleInferenceAgent.log", utils::ScLogLevel::Debug);

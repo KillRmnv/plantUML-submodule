@@ -8,6 +8,6 @@
 
 #include <sc-memory/sc_module.hpp>
 
-class ExampleModule : public ScModule
+class erDiagramModule : public ScModule
 {
 };
