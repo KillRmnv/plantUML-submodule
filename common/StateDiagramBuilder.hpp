@@ -12,7 +12,7 @@ class StateDiagramBuilder : public ParticularDiagramBuilder
 public:
     StateDiagramBuilder(ScMemoryContext * context, utils::ScLogger * logger);
 
-    void ProcessNode(ScAddr Node) override;
+    void ProcessNode(ScAddr Node,ScAddr package) override;
     void ProcessEdgesByNode(ScAddr Node,ScAddr package) override;
     void ProcessAdjacentNodes(ScAddr Node,ScAddr package) override;
     void ProcessUnusedEdges(ScAddr package, std::shared_ptr<ScAddrSet> edges) override;

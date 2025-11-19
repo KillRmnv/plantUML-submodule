@@ -2,6 +2,7 @@
 #include <utility>
 
 #include "StateDiagramBuilder.hpp"
+#include <sc-memory/sc_addr.hpp>
 #include <sc-memory/sc_iterator.hpp>
 #include <sc-memory/sc_keynodes.hpp>
 #include <sc-memory/sc_type.hpp>
@@ -287,13 +288,18 @@ std::vector<ScAddrVector> StateDiagramBuilder::FindSequence(
 
     return result;
 }
-void StateDiagramBuilder::ProcessNode(ScAddr Node)
+void StateDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
 {
     if(usedNodes->find(Node)==usedNodes->end() && 
     context->CheckConnector(ScKeynodes::action, Node, ScType::PermPosArc)&&
     nodes.find(Node)==nodes.end()){
-        
-
+        ScIterator5Ptr it5=context->CreateIterator5(Node, ScType::CommonArc,ScType::NodeTuple,ScType::PosArc,
+             Keynodes::nrel_decomposition_of_action);
+        while(it5->Next()){
+            if(context->CheckConnector(package, it5->Get(2), ScType::PermPosArc)){
+                return;
+            }
+        }
 
         nodes[Node]=context->GetElementSystemIdentifier(Node); 
         usedNodes->insert(Node);

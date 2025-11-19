@@ -22,7 +22,7 @@ public:
     }
 
     virtual ~ParticularDiagramBuilder() ;
-    virtual void ProcessNode(ScAddr Node);
+    virtual void ProcessNode(ScAddr Node,ScAddr package);
     virtual void ProcessEdgesByNode(ScAddr Node, ScAddr package);
     virtual void ProcessAdjacentNodes(ScAddr Node, ScAddr package);
     virtual void ProcessUnusedEdges(ScAddr package, std::shared_ptr<ScAddrSet>);

@@ -2,7 +2,7 @@
 
 ParticularDiagramBuilder::~ParticularDiagramBuilder() = default;
 
-void ParticularDiagramBuilder::ProcessNode(ScAddr Node) {}
+void ParticularDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package) {}
 void ParticularDiagramBuilder::ProcessPackage(ScAddr package) {}
 
 void ParticularDiagramBuilder::ProcessEdgesByNode(ScAddr Node, ScAddr package) {}

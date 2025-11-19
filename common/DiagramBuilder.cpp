@@ -31,7 +31,7 @@ std::shared_ptr<ScAddrSet> packages=builder->GetAllPackages( diagram);
             } 
 
             //обработка sc элементов на 1 уровне
-            builder->ProcessNode(it->Get(2));
+            builder->ProcessNode(it->Get(2),package);
             builder->ProcessEdgesByNode(it->Get(2),package);
             builder->ProcessAdjacentNodes(it->Get(2),package);
         }
@@ -50,7 +50,7 @@ std::shared_ptr<ScAddrSet> packages=builder->GetAllPackages( diagram);
         ScType::Node);
 
         while (it->Next()) {       
-            builder->ProcessNode(it->Get(2));
+            builder->ProcessNode(it->Get(2),diagram);
             builder->ProcessEdgesByNode(it->Get(2),diagram);
             builder->ProcessAdjacentNodes(it->Get(2),diagram);
         }
