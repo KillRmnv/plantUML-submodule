@@ -1,12 +1,8 @@
-#include <sc-memory/sc_addr.hpp>
-#include <sc-memory/sc_iterator.hpp>
-#include <sc-memory/sc_stream.hpp>
-#include <sc-memory/sc_type.hpp>
-#include <memory>
+
 #include <string>
 #include "DiagramBuilder.hpp"
 
-std::shared_ptr<ScAddrSet> DiagramBuilder::generateStructure(ParticularDiagramBuilder* builder,ScAddr diagram){
+std::shared_ptr<ScAddrSet> DiagramBuilder::generateStructure(std::shared_ptr<ParticularDiagramBuilder> builder,ScAddr diagram){
 
 std::shared_ptr<ScAddrSet> packages=builder->GetAllPackages( diagram);
 
@@ -21,7 +17,7 @@ std::shared_ptr<ScAddrSet> packages=builder->GetAllPackages( diagram);
 
         builder->GetLogger()->Debug("processing package:"+builder->GetContext()->GetElementSystemIdentifier(package));
 
-        ScIterator3Ptr it=builder->GetContext()->CreateIterator3(package, ScType::CommonArc,
+        ScIterator3Ptr it=builder->GetContext()->CreateIterator3(package, ScType::PosArc,
              ScType::Node);
              
         while (it->Next()) { 
@@ -36,27 +32,27 @@ std::shared_ptr<ScAddrSet> packages=builder->GetAllPackages( diagram);
 
             //обработка sc элементов на 1 уровне
             builder->ProcessNode(it->Get(2));
-            builder->ProcessEdgesByNode(it->Get(2));
-            builder->ProcessAdjacentNodes(it->Get(2));
+            builder->ProcessEdgesByNode(it->Get(2),package);
+            builder->ProcessAdjacentNodes(it->Get(2),package);
         }
 
         builder->GetLogger()->Debug("processing unused edges in package:"+builder->GetContext()->GetElementSystemIdentifier(package)+
     ". amount of unused:"+std::to_string(unusedAddrs->size()));
         //обработка дуг из внутренних пакетов на уровни выше
         builder->ProcessUnusedEdges(package,unusedAddrs);
+        builder->ProcessPackage(package);
     }
 
     builder->GetLogger()->Debug("processing package:"+builder->GetContext()->GetElementSystemIdentifier(diagram));
 
     //обработка sc элементов на самом верхнем уровне
-    ScIterator3Ptr it=builder->GetContext()->CreateIterator3(diagram, ScType::CommonArc,
+    ScIterator3Ptr it=builder->GetContext()->CreateIterator3(diagram, ScType::PosArc,
         ScType::Node);
 
-        while (it->Next()) { 
-            
+        while (it->Next()) {       
             builder->ProcessNode(it->Get(2));
-            builder->ProcessEdgesByNode(it->Get(2));
-            builder->ProcessAdjacentNodes(it->Get(2));
+            builder->ProcessEdgesByNode(it->Get(2),diagram);
+            builder->ProcessAdjacentNodes(it->Get(2),diagram);
         }
         //обработка дуг из внутренних пакетов на уровни выше
         builder->GetLogger()->Debug("processing unused edges in package:"+
@@ -64,7 +60,7 @@ std::shared_ptr<ScAddrSet> packages=builder->GetAllPackages( diagram);
     ". amount of unused:"+std::to_string(unusedAddrs->size()));
 
         builder->ProcessUnusedEdges(diagram,unusedAddrs);
-        builder->SavePackage();
+        // builder->SavePackage();
         
     return unusedAddrs;
 };

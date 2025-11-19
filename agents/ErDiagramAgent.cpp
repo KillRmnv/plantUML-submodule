@@ -15,10 +15,10 @@
 ErDiagramAgent::ErDiagramAgent()
 {
   m_logger =
-      utils::ScLogger(utils::ScLogger::ScLogType::File, "logs/ExampleInferenceAgent.log", utils::ScLogLevel::Debug);
+      utils::ScLogger(utils::ScLogger::ScLogType::File, "logs/ErDiagramAgent.log", utils::ScLogLevel::Debug);
 }
 
-ScResult ExampleInferenceAgent::DoProgram(ScActionInitiatedEvent const & event, ScAction & action)
+ScResult ErDiagramAgent::DoProgram(ScActionInitiatedEvent const & event, ScAction & action)
 {
   auto const [targetStructure, formulasSet, arguments, inputStructure] = action.GetArguments<4>();
 
@@ -33,7 +33,7 @@ ScResult ExampleInferenceAgent::DoProgram(ScActionInitiatedEvent const & event, 
   return action.FinishSuccessfully();
 }
 
-ScAddr ExampleInferenceAgent::GetActionClass() const
+ScAddr ErDiagramAgent::GetActionClass() const
 {
   return Keynodes::action_generate_er_diagram;
 }

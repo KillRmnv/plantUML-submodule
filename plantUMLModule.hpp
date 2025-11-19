@@ -4,11 +4,10 @@
  * (See accompanying file COPYING.MIT or copy at http://opensource.org/licenses/MIT)
  */
 
-#include "exampleModule.hpp"
+#pragma once
 
+#include <sc-memory/sc_module.hpp>
 
-#include "agents/ExampleInferenceAgent.hpp"
-
-SC_MODULE_REGISTER(ExampleModule)
-
-    ->Agent<ExampleInferenceAgent>();
+class PlantUMLModule : public ScModule
+{
+};

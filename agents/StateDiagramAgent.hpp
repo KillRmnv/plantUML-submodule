@@ -7,6 +7,7 @@
 #pragma once
 
 #include <sc-memory/sc_agent.hpp>
+#include <sc-memory/sc_agent_context.hpp>
 
 class StateDiagramAgent : public ScActionInitiatedAgent
 {
@@ -15,7 +16,9 @@ public:
 
   ScAddr GetActionClass() const override;
 
-  ScResult DoProgram(ScActionInitiatedEvent const & event, ScAction & action) override;
-
+  ScResult DoProgram( ScAction & action) override;
+  const ScAgentContext & GetContext() const {
+    return m_context;
+}
 
 };

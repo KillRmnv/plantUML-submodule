@@ -1,9 +1,8 @@
 #pragma once
-#include <sc-memory/sc_addr.hpp>
 #include "ParticularDiagramBuilder.hpp"
  class DiagramBuilder{
-    
-
     public:
-    std::shared_ptr<ScAddrSet> generateStructure(ParticularDiagramBuilder* builder,ScAddr diagram);
+    std::shared_ptr<ScAddrSet> generateStructure(std::shared_ptr<ParticularDiagramBuilder> builder,ScAddr diagram);
 };
+
+
