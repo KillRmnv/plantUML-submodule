@@ -8,6 +8,7 @@
 
 
 #include <sc-agents-common/utils/IteratorUtils.hpp>
+#include "common/UseCaseDiagramBuilder.hpp"
 
 #include "keynodes/Keynodes.hpp"
 
@@ -20,14 +21,18 @@ UseCaseDiagramAgent::UseCaseDiagramAgent()
 
 ScResult UseCaseDiagramAgent::DoProgram(ScActionInitiatedEvent const & event, ScAction & action)
 {
-  auto const [targetStructure, formulasSet, arguments, inputStructure] = action.GetArguments<4>();
+  auto const [input] = action.GetArguments<1>();
 
 
-  if (!arguments.IsValid())
+  if (!input.IsValid())
   {
     m_logger.Error("Arguments are not valid.");
-    // return action.FinishUnsuccessfully();
+     return action.FinishUnsuccessfully();
   }
+    DiagramBuilder builder;
+    std::shared_ptr<UseCaseDiagramBuilder> useCaseBuilder=std::make_shared<UseCaseDiagramBuilder>(&m_context,&m_logger);
+    builder.generateStructure(useCaseBuilder, input);
+    useCaseBuilder->GetResultString();
   ScAddr solutionNode=m_context.GenerateNode(ScType::ConstNode);
 
   action.FormResult(solutionNode);

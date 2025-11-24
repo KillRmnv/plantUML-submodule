@@ -1,0 +1,238 @@
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include "UseCaseDiagramBuilder.hpp"
+#include <sc-memory/sc_addr.hpp>
+#include <sc-memory/sc_iterator.hpp>
+#include <sc-memory/sc_keynodes.hpp>
+#include <sc-memory/sc_type.hpp>
+#include "keynodes/Keynodes.hpp"
+
+
+UseCaseDiagramBuilder::UseCaseDiagramBuilder(ScMemoryContext * context, utils::ScLogger * logger)
+    : ParticularDiagramBuilder( context, logger)
+{
+    
+}
+std::string UseCaseDiagramBuilder::trim(const std::string &s)
+{
+    std::string result = s;
+
+    const std::string prefixes[] = { "nrel_", "rrel_","concept_" };
+
+    bool changed = true;
+
+    while (changed)
+    {
+        changed = false;
+
+        for (const auto &p : prefixes)
+        {
+            if (result.rfind(p, 0) == 0)  
+            {
+                result = result.substr(p.size());
+                changed = true;
+            }
+        }
+    }
+
+    return result;
+};
+
+std::string UseCaseDiagramBuilder::trim_spaces(std::string str)
+{
+    str.erase(str.find_last_not_of(' ') + 1);  
+    str.erase(0, str.find_first_not_of(' '));  
+    return str;
+}
+
+void UseCaseDiagramBuilder::ProcessPackage(ScAddr package) {
+entities+="package "+trim(context->GetElementSystemIdentifier(package))+"{\n"+entitiesInCurrentPackage+
+    "}\n";
+    m_logger->Debug("package "+trim(context->GetElementSystemIdentifier(package))+"{\n"+entitiesInCurrentPackage+
+    "}\n");
+    entitiesInCurrentPackage="";
+}
+
+void UseCaseDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
+{
+            ScIterator5Ptr it5;
+            if(context->GetElementType(Node)==ScType::ConstNodeStructure&&!context->
+            CheckConnector(Keynodes::concept_er_package, Node, ScType::PosArc)){
+                it5=context->CreateIterator5(ScType::NodeStructure, ScType::PosArc,Node,ScType::PosArc, package);
+                bool check=true;
+                while(it5->Next()){
+                    if(it5->Get(0)!=package&&
+                    context->CheckConnector(Keynodes::concept_er_package,it5->Get(0), ScType::PosArc)){
+                        check=false;
+                        break;
+                    }
+                   
+                }
+                
+                if(nameByStruct.find(Node)==nameByStruct.end()&&check){
+                    ScIterator3Ptr it3=context->CreateIterator3(Node, ScType::PosArc,ScType::Node);
+                    while (it3->Next()) {
+                            it5=context->CreateIterator5(ScType::ConstNode, ScType::ConstCommonArc, 
+                                it3->Get(2), ScType::PosArc,ScType::ConstNodeNonRole);
+                            while(it5->Next()){
+                                if(context->CheckConnector(Node, it5->Get(1), ScType::PosArc)){
+                                    nameByNode[it5->Get(2)]=trim(context->GetElementSystemIdentifier(it5->Get(4)));
+                                    nameByStruct[Node]=nameByNode[it5->Get(2)];
+                                    entitiesInCurrentPackage+="usecase "+nameByNode[it5->Get(2)] +"\n";
+                                }
+                            }
+                    }
+                }
+            }
+}
+
+void UseCaseDiagramBuilder::ProcessEdge(ScAddr edge,ScAddr relation,ScAddr package){
+    if(usedEdges->find(edge)==usedEdges->end()){
+        ScIterator5Ptr it5=context->CreateIterator5(ScType::NodeStructure, ScType::PosArc, edge, ScType::PosArc, package);
+        while (it5->Next()) {
+            if (it5->Get(0)!=package&&
+                context->CheckConnector(Keynodes::concept_er_package,it5->Get(0), ScType::PosArc)) {
+                return;
+            }
+        }
+
+        std::tuple<ScAddr,ScAddr> p=context->GetConnectorIncidentElements(edge);
+        m_logger->Debug("Process edge by node: "+context->GetElementSystemIdentifier(get<0>(p))+
+            " to node:"+context->GetElementSystemIdentifier(get<1>(p)));
+            std::string addition;
+        if(relation==Keynodes::nrel_extend_use_case){
+            addition+=nameByStruct[get<0>(p)]+" ..> "+nameByStruct[get<1>(p)]+" : <<extend>>\n";
+        }else if(relation==Keynodes::nrel_include_use_case){
+            addition+=nameByStruct[get<0>(p)]+" ..> "+nameByStruct[get<1>(p)]+" : <<include>>\n";
+        }else if(relation==Keynodes::nrel_generalization_use_case){
+
+            ScIterator3Ptr it3=context->CreateIterator3(ScType::ConstNodeClass, ScType::PosArc, get<0>(p));
+            while(it3->Next()){
+                ScIterator5Ptr it5=context->CreateIterator5(Keynodes::concept_actor, ScType::CommonArc, 
+                    it3->Get(0),ScType::PosArc, package);
+                    if(it5->Next()){
+                            addition+=context->GetElementSystemIdentifier(get<0>(p))+" --|> "+
+                            context->GetElementSystemIdentifier(get<1>(p))+"\n";
+                            break;
+                        }else {
+                            addition+=nameByStruct[get<0>(p)]+" --|> "+nameByStruct[get<1>(p)]+"\n";
+                        }
+        }
+            
+        }else if(get<0>(p)==Keynodes::concept_actor &&relation==ScKeynodes::nrel_inclusion) {
+            ScIterator3Ptr it3=context->CreateIterator3(get<1>(p), ScType::PosArc, ScType::ConstNode);
+            while(it3->Next())
+                entitiesInCurrentPackage+="actor "+context->GetElementSystemIdentifier(it3->Get(2))+"\n";
+        }else{           
+            if(actorsToActions.find(get<0>(p))==actorsToActions.end()||
+            actorsToActions[get<0>(p)].find(relation)==actorsToActions[get<0>(p)].end()){
+                ScIterator3Ptr it3=context->CreateIterator3(ScType::ConstNodeClass, ScType::PosArc, get<0>(p));
+                    while(it3->Next()){
+                        ScIterator5Ptr it5=context->CreateIterator5(Keynodes::concept_actor, ScType::CommonArc, 
+                            it3->Get(0),ScType::PosArc, ScKeynodes::nrel_inclusion);
+                        if(it5->Next()){
+                            addition+=context->GetElementSystemIdentifier(get<0>(p))+" --> "+trim(context->GetElementSystemIdentifier(relation))+"\n";
+                            actorsToActions[get<0>(p)].insert(relation);
+                            m_logger->Debug("insert relation:"+context->GetElementSystemIdentifier(relation)+
+                            " to action:"+context->GetElementSystemIdentifier(get<0>(p)));
+                            break;
+                        }
+                    }
+            }
+            
+        }
+        usedEdges->insert(edge);
+        relations+=addition;
+    }
+}
+void UseCaseDiagramBuilder::ProcessEdgesByNode(ScAddr Node,ScAddr package)
+{
+    
+}
+void UseCaseDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
+{
+        ScIterator5Ptr it5=context->CreateIterator5(Node, ScType::CommonArc, 
+            ScType::Node, ScType::PosArc, ScType::NodeNonRole);
+        while(it5->Next()){
+
+            if(context->CheckConnector(package, 
+                        it5->Get(1), ScType::PosArc)){
+                m_logger->Debug("processing :"+context->GetElementSystemIdentifier(Node)+" to "+
+                context->GetElementSystemIdentifier(it5->Get(2)));
+                ProcessNode(it5->Get(2),package);
+                ProcessEdge(it5->Get(1),it5->Get(4),package);
+            }
+        }
+        
+    
+ }
+
+std::shared_ptr<ScAddrSet> UseCaseDiagramBuilder::GetAllPackages(ScAddr diagram)
+{   
+
+    ScIterator5Ptr it5struct=context->CreateIterator5(Keynodes::concept_er_package, ScType::ConstPermPosArc,
+        ScType::NodeStructure, ScType::ConstPermPosArc,diagram);
+    ScIterator5Ptr it5;
+    std::shared_ptr<ScAddrSet> packg=std::make_shared<ScAddrSet>();
+    std::string addition="package "+trim(context->GetElementSystemIdentifier(diagram))+"{\n";
+    m_logger->Debug("trying to capture packages for:"+context->GetElementSystemIdentifier(diagram)+" type:"+std::string(context->GetElementType(diagram)));
+    while (it5struct->Next()) {
+        it5=context->CreateIterator5(ScType::NodeStructure, ScType::PosArc, 
+            it5struct->Get(2),ScType::PosArc,it5struct->Get(4));
+        bool check=false;
+        while(it5->Next()){
+
+            if(it5->Get(0)!=diagram&& context->CheckConnector(Keynodes::concept_er_package, 
+                it5->Get(0), ScType::PosArc)){
+                check=true;
+                break;
+            }
+
+        }
+        if(!check){
+           
+            addition+="package "+trim(context->GetElementSystemIdentifier(it5struct->Get(2)))+"{\n}\n";
+        }
+    }
+    packg->insert(diagram);
+    addition+="}\n";
+    preamble+=addition;
+    m_logger->Debug(" packages size for:"+context->GetElementSystemIdentifier(diagram)+
+    " size:"+to_string(packg->size()));
+
+    return packg;
+}
+std::shared_ptr<ScAddrSet> UseCaseDiagramBuilder::GetUsedNodes(ScAddr addr)
+{
+    return usedNodes;
+}
+std::string UseCaseDiagramBuilder::GetResultString()
+{
+    return "@startuml\n"+preamble+entities+entitiesInCurrentPackage+relations+"\n@enduml";
+}
+
+bool UseCaseDiagramBuilder::PackageCheck(ScAddr package,ScAddr parent) {
+    if(!context->CheckConnector(Keynodes::concept_er_package, package,ScType::PosArc)){
+        return false;
+    }
+     m_logger->Debug("trying to capture packages in package check for "+context->GetElementSystemIdentifier(parent));
+
+    ScIterator5Ptr it5=context->CreateIterator5(ScType::NodeStructure, ScType::PosArc, 
+        package,ScType::PosArc,parent);
+    bool check=false;
+    while(it5->Next()){
+
+        if(it5->Get(0)!=parent&& context->CheckConnector(Keynodes::concept_er_package, 
+            it5->Get(0), ScType::PosArc)){
+            check=true;
+            break;
+        }
+
+    }
+    if(!check)
+        m_logger->Debug("successfully checked:"+context->GetElementSystemIdentifier(package));
+    return !check;
+
+
+}

@@ -25,11 +25,12 @@ public:
     virtual void ProcessNode(ScAddr Node,ScAddr package);
     virtual void ProcessEdgesByNode(ScAddr Node, ScAddr package);
     virtual void ProcessAdjacentNodes(ScAddr Node, ScAddr package);
-    virtual void ProcessUnusedEdges(ScAddr package, std::shared_ptr<ScAddrSet>);
     virtual std::shared_ptr<ScAddrSet> GetAllPackages(ScAddr diagram);
     virtual std::shared_ptr<ScAddrSet> GetUsedNodes(ScAddr diagram);
     virtual std::string GetResultString();
     virtual void ProcessPackage(ScAddr package);
+
+    virtual bool PackageCheck(ScAddr package,ScAddr parent);
 
     ScMemoryContext* GetContext() { return context; }
     utils::ScLogger* GetLogger() { return m_logger; }

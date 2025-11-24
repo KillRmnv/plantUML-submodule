@@ -32,4 +32,13 @@ public:
 
   static inline ScKeynode const action_generate_use_case_diagram{"action_generate_use_case_diagram", ScType::ConstNodeClass};
 
+  static inline ScKeynode const rrel_entry{"rrel_entry", ScType::ConstNodeRole};
+
+  static inline ScKeynode const concept_actor{"concept_actor", ScType::ConstNodeClass};
+
+  static inline ScKeynode const concept_er_package{"concept_er_package", ScType::ConstNodeClass};
+  static inline ScKeynode const nrel_extend_use_case{"nrel_extend_use_case", ScType::ConstNodeNonRole};
+  static inline ScKeynode const nrel_include_use_case{"nrel_include_use_case", ScType::ConstNodeNonRole};
+  static inline ScKeynode const nrel_generalization_use_case{"nrel_generalization_use_case", ScType::ConstNodeNonRole};
+
 };
