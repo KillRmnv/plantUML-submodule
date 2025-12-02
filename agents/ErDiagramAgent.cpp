@@ -5,6 +5,7 @@
  */
 
 #include "ErDiagramAgent.hpp"
+#include "common/PlantUmlPngGenerator.hpp"
 
 
 #include <sc-agents-common/utils/IteratorUtils.hpp>
@@ -29,6 +30,7 @@ ScResult ErDiagramAgent::DoProgram(ScActionInitiatedEvent const & event, ScActio
     // return action.FinishUnsuccessfully();
   }
   ScAddr solutionNode=m_context.GenerateNode(ScType::ConstNode);
+
   action.FormResult(solutionNode);
   return action.FinishSuccessfully();
 }

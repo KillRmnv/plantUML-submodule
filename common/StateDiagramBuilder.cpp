@@ -314,6 +314,9 @@ void StateDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
                     return;
                 }
             }
+            if(context->CheckConnector(package, it5->Get(2), ScType::PermPosArc)){
+                return;
+            }
         }
         entitiesInCurrentPackage+="state "+context->GetElementSystemIdentifier(Node)+"{\n}\n";
     }
@@ -410,28 +413,28 @@ void StateDiagramBuilder::ProcessEdgesByNode(ScAddr Node,ScAddr package)
 {
     if(context->CheckConnector(ScKeynodes::action,Node, 
         ScType::PermPosArc)){
-            ScIterator3Ptr it3 =context->CreateIterator3(ScType::Node, ScType::CommonArc, Node);
+            ScIterator5Ptr it5 =context->CreateIterator5(ScType::Node, ScType::CommonArc, Node,ScType::PosArc,package);
             m_logger->Debug("ProcessEdgesByNode:"+context->GetElementSystemIdentifier(Node));
 
-            while(it3->Next()){
-                m_logger->Debug("source:"+context->GetElementSystemIdentifier(it3->Get(0)));
+            while(it5->Next()){
+                m_logger->Debug("source:"+context->GetElementSystemIdentifier(it5->Get(0)));
                if(context->CheckConnector(package, 
-                it3->Get(0), ScType::PosArc)&&
-                usedEdges->find(it3->Get(1))==usedEdges->end()&&
+                it5->Get(0), ScType::PosArc)&&
+                usedEdges->find(it5->Get(1))==usedEdges->end()&&
                 context->CheckConnector(ScKeynodes::action, 
-                    it3->Get(0), ScType::PosArc))
+                    it5->Get(0), ScType::PosArc))
                 {
                 if(!context->CheckConnector(package, 
-                    it3->Get(1), ScType::PosArc)){
+                    it5->Get(1), ScType::PosArc)){
                     m_logger->Debug("why?????");}else{
-                ProcessEdge(it3->Get(1),Node);
-                usedEdges->insert(it3->Get(1)); 
-                m_logger->Debug("conditionMap:"+conditionMap[it3->Get(1)].first);
+                ProcessEdge(it5->Get(1),Node);
+                usedEdges->insert(it5->Get(1)); 
+                m_logger->Debug("conditionMap:"+conditionMap[it5->Get(1)].first);
                     }
                     
                 }     
             }   
-    }
+        }
 }
 //TODO:refactor
 void StateDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
@@ -582,6 +585,10 @@ std::shared_ptr<ScAddrSet> StateDiagramBuilder::GetAllPackages(ScAddr diagram)
     m_logger->Debug("trying to capture packages for:"+context->GetElementSystemIdentifier(diagram)+" type:"+std::string(context->GetElementType(diagram)));
     //сбор всех действий в одном пакете 
     while (it3struct->Next()) {
+
+
+
+
         ScAddrSet actions;
         ScAddr structure;
         ScAddrVector tuple=CaptureTuple(it3struct->Get(2));
@@ -601,6 +608,8 @@ std::shared_ptr<ScAddrSet> StateDiagramBuilder::GetAllPackages(ScAddr diagram)
             packg->insert(it3struct->Get(2));
 
         }
+
+
         it3=context->CreateIterator3(structure, ScType::ConstPermPosArc, ScType::Node);
         m_logger->Debug("Processing actions for "+context->GetElementSystemIdentifier(structure));
             while(it3->Next()){
@@ -617,8 +626,15 @@ std::shared_ptr<ScAddrSet> StateDiagramBuilder::GetAllPackages(ScAddr diagram)
         
         structures.insert(structure);    
         actionsMap[structure] = actions;
+
+
+
+
     }
     m_logger->Debug("start processing intersections(size):"+to_string(structures.size()));
+    // if(structures.size()==0){
+    //     packages.insert(diagram);
+    // }
     ScIterator5Ptr it5;
     //проверка вхождений действий из одного пакета в другой
     for( auto str:structures){
@@ -669,7 +685,8 @@ std::shared_ptr<ScAddrSet> StateDiagramBuilder::GetAllPackages(ScAddr diagram)
     for(auto p:*packg){
         this->packages->insert(p);
     }
-    packg->insert(diagram);
+    if(structures.size()>0)
+        packg->insert(diagram);
     return packg;
 }
 std::shared_ptr<ScAddrSet> StateDiagramBuilder::GetUsedNodes(ScAddr addr)

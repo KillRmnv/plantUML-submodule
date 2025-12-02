@@ -9,7 +9,7 @@
 
 #include <sc-agents-common/utils/IteratorUtils.hpp>
 #include "common/UseCaseDiagramBuilder.hpp"
-
+#include "common/PlantUmlPngGenerator.hpp"
 #include "keynodes/Keynodes.hpp"
 
 
@@ -32,8 +32,16 @@ ScResult UseCaseDiagramAgent::DoProgram(ScActionInitiatedEvent const & event, Sc
     DiagramBuilder builder;
     std::shared_ptr<UseCaseDiagramBuilder> useCaseBuilder=std::make_shared<UseCaseDiagramBuilder>(&m_context,&m_logger);
     builder.generateStructure(useCaseBuilder, input);
-    useCaseBuilder->GetResultString();
-  ScAddr solutionNode=m_context.GenerateNode(ScType::ConstNode);
+    ScAddr solutionNode=m_context.GenerateNode(ScType::ConstNodeStructure);
+    std::string result=useCaseBuilder->GetResultString();
+    ScAddr text=m_context.GenerateNode(ScType::ConstNodeLink);
+  
+    if(m_context.SetLinkContent(text, result)){
+      m_context.GenerateConnector(ScType::ConstPosArc, solutionNode,text );
+      m_logger.Debug("Set link text");
+      PlantUmlPngGenerator generator(&m_context,&m_logger);
+      generator.png_generator(result, solutionNode);
+    }
 
   action.FormResult(solutionNode);
   return action.FinishSuccessfully();

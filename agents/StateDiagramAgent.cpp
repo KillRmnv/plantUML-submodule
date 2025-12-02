@@ -10,9 +10,11 @@
 #include "StateDiagramAgent.hpp"
 #include <sc-memory/sc_type.hpp>
 #include "common/StateDiagramBuilder.hpp"
+#include "common/PlantUmlPngGenerator.hpp"
 
 // #include "common/StateDiagramBuilder.hpp"
 #include "keynodes/Keynodes.hpp"
+#include <string>
 
 
 StateDiagramAgent::StateDiagramAgent()
@@ -39,9 +41,17 @@ ScResult StateDiagramAgent::DoProgram( ScAction & action)
     DiagramBuilder builder;
     std::shared_ptr<StateDiagramBuilder> stateBuilder=make_shared<StateDiagramBuilder>(&m_context,&m_logger);
     builder.generateStructure(stateBuilder, input);
-    stateBuilder->GetResultString();
-    ScAddr solutionNode=m_context.GenerateNode(ScType::ConstNode);
+   std::string result= stateBuilder->GetResultString();
 
+
+    ScAddr solutionNode=m_context.GenerateNode(ScType::ConstNodeStructure);
+    ScAddr text=m_context.GenerateNode(ScType::ConstNodeLink);
+    if(m_context.SetLinkContent(text, result)){
+      m_context.GenerateConnector(ScType::ConstPosArc, solutionNode,text );
+      m_logger.Debug("Set link text");
+      PlantUmlPngGenerator generator(&m_context,&m_logger);
+      generator.png_generator(result, solutionNode);
+    }
     action.FormResult(solutionNode);
     return action.FinishSuccessfully();
   
