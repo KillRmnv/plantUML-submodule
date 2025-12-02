@@ -2,14 +2,13 @@
 #include <string>
 #include "DiagramBuilder.hpp"
 
-std::shared_ptr<ScAddrSet> DiagramBuilder::generateStructure(std::shared_ptr<ParticularDiagramBuilder> builder,ScAddr diagram){
+void DiagramBuilder::generateStructure(std::shared_ptr<ParticularDiagramBuilder> builder,ScAddr diagram){
 
 std::shared_ptr<ScAddrSet> packages=builder->GetAllPackages( diagram);
 
     builder->GetLogger()->Debug("amount of packages captured in "+
         builder->GetContext()->GetElementSystemIdentifier(diagram)+":"+ std::to_string(packages->size()));
 
-    std::shared_ptr<ScAddrSet> unusedAddrs=std::make_shared<ScAddrSet>();
 
     for(auto package:*packages){
 
@@ -20,7 +19,7 @@ std::shared_ptr<ScAddrSet> packages=builder->GetAllPackages( diagram);
         while(it->Next()){
             if(builder->PackageCheck(it->Get(2),package)){
                 builder->GetLogger()->Debug("internal package start processing:"+builder->GetContext()->GetElementSystemIdentifier(it->Get(2)));
-                auto result=generateStructure(builder,it->Get(2));
+                generateStructure(builder,it->Get(2));
             } 
         }    
         it=builder->GetContext()->CreateIterator3(package, ScType::PosArc,
@@ -47,5 +46,4 @@ std::shared_ptr<ScAddrSet> packages=builder->GetAllPackages( diagram);
         }
     builder->ProcessPackage(diagram);
     builder->GetLogger()->Debug(builder->GetResultString());
-    return unusedAddrs;
 };
