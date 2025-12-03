@@ -6,6 +6,7 @@
 
 #include "ErDiagramAgent.hpp"
 #include "common/PlantUmlPngGenerator.hpp"
+#include "common/ErDiagramBuilder.hpp" 
 
 
 #include <sc-agents-common/utils/IteratorUtils.hpp>
@@ -21,15 +22,32 @@ ErDiagramAgent::ErDiagramAgent()
 
 ScResult ErDiagramAgent::DoProgram(ScActionInitiatedEvent const & event, ScAction & action)
 {
-  auto const [targetStructure, formulasSet, arguments, inputStructure] = action.GetArguments<4>();
+  auto const [input] = action.GetArguments<1>(); 
 
-
-  if (!arguments.IsValid())
+  if (!input.IsValid())
   {
-    m_logger.Error("Arguments are not valid.");
-    // return action.FinishUnsuccessfully();
+    m_logger.Error("Arguments are not valid. Input structure address is required.");
+     return action.FinishUnsuccessfully();
   }
-  ScAddr solutionNode=m_context.GenerateNode(ScType::ConstNode);
+  
+  DiagramBuilder builder;
+  std::shared_ptr<ErDiagramBuilder> erBuilder = std::make_shared<ErDiagramBuilder>(&m_context, &m_logger);
+  
+  builder.generateStructure(erBuilder, input); 
+  
+  std::string result = erBuilder->GetResultString();
+  
+  ScAddr solutionNode = m_context.GenerateNode(ScType::ConstNodeStructure);
+  ScAddr textLink = m_context.GenerateNode(ScType::ConstNodeLink);
+  
+  if(m_context.SetLinkContent(textLink, result))
+  {
+    m_context.GenerateConnector(ScType::ConstPosArc, solutionNode, textLink);
+    m_logger.Debug("Set link text with PlantUML code.");
+    
+    PlantUmlPngGenerator generator(&m_context, &m_logger);
+    generator.png_generator(result, solutionNode); 
+  }
 
   action.FormResult(solutionNode);
   return action.FinishSuccessfully();
@@ -39,4 +57,3 @@ ScAddr ErDiagramAgent::GetActionClass() const
 {
   return Keynodes::action_generate_er_diagram;
 }
-
