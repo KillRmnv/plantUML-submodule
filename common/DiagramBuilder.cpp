@@ -24,8 +24,12 @@ std::shared_ptr<ScAddrSet> packages=builder->GetAllPackages( diagram);
         }    
         it=builder->GetContext()->CreateIterator3(package, ScType::PosArc,
             ScType::Node); 
-        while (it->Next()) {         
+        while (it->Next()) {    
+            try{     
             builder->ProcessNode(it->Get(2),package);
+            }catch(int e){
+                throw e;
+            }
             builder->ProcessEdgesByNode(it->Get(2),package);
             builder->ProcessAdjacentNodes(it->Get(2),package);
         }
@@ -39,8 +43,12 @@ std::shared_ptr<ScAddrSet> packages=builder->GetAllPackages( diagram);
     ScIterator3Ptr it=builder->GetContext()->CreateIterator3(diagram, ScType::PosArc,
         ScType::Node);
 
-    while (it->Next()) {       
+    while (it->Next()) {   
+        try{    
             builder->ProcessNode(it->Get(2),diagram);
+        }catch(int e){
+            throw e;
+        }
             builder->ProcessEdgesByNode(it->Get(2),diagram);
             builder->ProcessAdjacentNodes(it->Get(2),diagram);
         }

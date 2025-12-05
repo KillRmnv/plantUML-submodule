@@ -24,6 +24,8 @@ public:
 
   static inline ScKeynode const nrel_goto{"nrel_goto"};
 
+  static inline ScKeynode const non_atomic_action{"non_atomic_action"};
+
   static inline ScKeynode const nrel_condition{"nrel_condition"};
 
   static inline ScKeynode const nrel_priority_path{"nrel_priority_path"};

@@ -148,12 +148,12 @@ ScAddr PlantUmlPngGenerator::png_generator(const std::string& plantUML_code, ScA
     if (stream && stream->IsValid() && stream->HasFlag(SC_STREAM_FLAG_READ)) 
     {
         context->SetLinkContent(link, stream);
-        context->GenerateConnector(ScType::ConstPosArc, outputNode, link);
+        context->GenerateConnector(ScType::ConstPermPosArc, outputNode, link);
 
         ScAddr format_png = context->ResolveElementSystemIdentifier("format_png");
         ScAddr nrel_format = context->ResolveElementSystemIdentifier("nrel_format");
         ScAddr edge = context->GenerateConnector(ScType::ConstCommonArc, link, format_png);
-        ScAddr rel= context->GenerateConnector(ScType::ConstPosArc, nrel_format, edge);
+        ScAddr rel= context->GenerateConnector(ScType::ConstPermPosArc, nrel_format, edge);
 
         m_logger->Debug("PNG успешно сохранён как Base64-link в SC-памяти");
          deleteTempFiles(pumlFile, pngFile);

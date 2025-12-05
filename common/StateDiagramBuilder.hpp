@@ -12,7 +12,6 @@ class StateDiagramBuilder : public ParticularDiagramBuilder
 
 public:
     StateDiagramBuilder(ScMemoryContext * context, utils::ScLogger * logger);
-
     void ProcessNode(ScAddr Node,ScAddr package) override;
     void ProcessEdgesByNode(ScAddr Node,ScAddr package) override;
     void ProcessAdjacentNodes(ScAddr Node,ScAddr package) override;
@@ -20,8 +19,6 @@ public:
     std::shared_ptr<ScAddrSet> GetUsedNodes(ScAddr diagram) override;
     std::string GetResultString() override;
     void ProcessPackage(ScAddr package) override;
-
-
 private:
     std::vector<std::pair<ScAddr, int>> FindEntryPoints(ScAddr action,ScAddr package);
     ScAddrVector CaptureTuple(ScAddr structure);

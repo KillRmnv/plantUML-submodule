@@ -17,6 +17,7 @@ class PlantUmlPngGenerator {
 private:
     ScMemoryContext * context;
     utils::ScLogger * m_logger;
+    
     void deleteTempFiles(const std::string& pumlPath,
         const std::string& pngPath);
     static std::string base64Encode(const std::vector<unsigned char>& data);

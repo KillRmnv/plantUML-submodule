@@ -31,8 +31,16 @@ ScResult UseCaseDiagramAgent::DoProgram(ScActionInitiatedEvent const & event, Sc
   }
     DiagramBuilder builder;
     std::shared_ptr<UseCaseDiagramBuilder> useCaseBuilder=std::make_shared<UseCaseDiagramBuilder>(&m_context,&m_logger);
-    builder.generateStructure(useCaseBuilder, input);
-    ScAddr solutionNode=m_context.GenerateNode(ScType::ConstNodeStructure);
+    
+    try{
+      builder.generateStructure(useCaseBuilder, input);
+      }catch(int e){
+        if(e==1){
+          m_logger.Error("In the use case diagram, actions should have transitions only within a single package.");
+         return  action.FinishUnsuccessfully();
+        }
+      }
+    ScAddr solutionNode=m_context.GenerateNode(ScType::ConstNodeTuple);
     std::string result=useCaseBuilder->GetResultString();
     ScAddr text=m_context.GenerateNode(ScType::ConstNodeLink);
   

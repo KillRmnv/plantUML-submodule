@@ -26,3 +26,6 @@ std::string ParticularDiagramBuilder::GetResultString()
 {
     return {};
 }
+void ParticularDiagramBuilder::SetType(bool type){
+  this->type=type;
+}

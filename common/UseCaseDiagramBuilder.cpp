@@ -1,5 +1,6 @@
 #include <memory>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include "UseCaseDiagramBuilder.hpp"
 #include <sc-memory/sc_addr.hpp>
@@ -12,7 +13,6 @@
 UseCaseDiagramBuilder::UseCaseDiagramBuilder(ScMemoryContext * context, utils::ScLogger * logger)
     : ParticularDiagramBuilder( context, logger)
 {
-    
 }
 std::string UseCaseDiagramBuilder::trim(const std::string &s)
 {
@@ -70,7 +70,7 @@ void UseCaseDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
                    
                 }
                 
-                if(nameByStruct.find(Node)==nameByStruct.end()&&check){
+                if(check&&nameByStruct.find(Node)==nameByStruct.end()){
                     ScIterator3Ptr it3=context->CreateIterator3(Node, ScType::PosArc,ScType::Node);
                     while (it3->Next()) {
                             it5=context->CreateIterator5(ScType::ConstNode, ScType::ConstCommonArc, 
@@ -80,6 +80,15 @@ void UseCaseDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
                                     nameByNode[it5->Get(2)]=trim(context->GetElementSystemIdentifier(it5->Get(4)));
                                     nameByStruct[Node]=nameByNode[it5->Get(2)];
                                     entitiesInCurrentPackage+="usecase "+nameByNode[it5->Get(2)] +"\n";
+                                    bool check=false;
+                                    for(auto pair:structuresByLevel){
+                                        if(pair.second.find(addrMap[Node])!=pair.second.end()){
+                                            if(check)
+                                                throw 1;
+                                            else
+                                                check=true;
+                                        }
+                                    }
                                 }
                             }
                     }
@@ -170,7 +179,13 @@ void UseCaseDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
 
 std::shared_ptr<ScAddrSet> UseCaseDiagramBuilder::GetAllPackages(ScAddr diagram)
 {   
-
+    level++;
+    if(structuresByLevel.find(level)==structuresByLevel.end()){
+        structuresByLevel.emplace(
+            level,
+            std::unordered_set<std::tuple<ScAddr,ScAddr,ScAddr>, ScAddrTripleHash, ScAddrTripleEq>()
+        );
+            }
     ScIterator5Ptr it5struct=context->CreateIterator5(Keynodes::concept_er_package, ScType::ConstPermPosArc,
         ScType::NodeStructure, ScType::ConstPermPosArc,diagram);
     ScIterator5Ptr it5;
@@ -214,6 +229,33 @@ std::string UseCaseDiagramBuilder::GetResultString()
 
 bool UseCaseDiagramBuilder::PackageCheck(ScAddr package,ScAddr parent) {
     if(!context->CheckConnector(Keynodes::concept_er_package, package,ScType::PosArc)){
+        ScIterator5Ptr it5=context->CreateIterator5(ScType::NodeStructure, ScType::PosArc, 
+            package,ScType::PosArc,parent);
+            bool check=false;
+            while(it5->Next()){
+        
+                if(it5->Get(0)!=parent&& context->CheckConnector(Keynodes::concept_er_package, 
+                    it5->Get(0), ScType::PosArc)&&
+                    context->CheckConnector(parent, 
+                        it5->Get(0), ScType::PosArc)){
+                    check=true;
+                    break;
+                }
+        
+            }
+            if(!check){
+                std::tuple<ScAddr> elements;
+                m_logger->Debug("Structure "+context->GetElementSystemIdentifier(package)+" on level "+to_string(level));
+                it5=context->CreateIterator5(ScType::ConstNode, ScType::CommonArc, ScType::Node, ScType::ConstPermPosArc, package);
+                while (it5->Next()) {
+                    ScIterator3Ptr it3=context->CreateIterator3(ScType::ConstNodeNonRole, ScType::ConstPermPosArc,it5->Get(1) );
+                    while(it3->Next()){
+                        structuresByLevel[level].insert(std::make_tuple(it5->Get(0),it5->Get(2),it3->Get(0)));
+                        addrMap[package]=std::make_tuple(it5->Get(0),it5->Get(2),it3->Get(0));
+                        return false;
+                    }
+                } 
+            }
         return false;
     }
      m_logger->Debug("trying to capture packages in package check for "+context->GetElementSystemIdentifier(parent));

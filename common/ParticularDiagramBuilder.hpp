@@ -9,6 +9,7 @@ class ParticularDiagramBuilder {
 protected:
 std::shared_ptr<ScAddrSet> usedNodes; 
 std::shared_ptr<ScAddrSet> usedEdges;
+bool type=false;
     ScMemoryContext * context;
     utils::ScLogger * m_logger;
 
@@ -34,4 +35,6 @@ public:
 
     ScMemoryContext* GetContext() { return context; }
     utils::ScLogger* GetLogger() { return m_logger; }
+    
+    void SetType(bool type);
 };

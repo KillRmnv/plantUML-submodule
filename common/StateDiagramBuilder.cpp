@@ -4,6 +4,7 @@
 #include <utility>
 #include "StateDiagramBuilder.hpp"
 #include <sc-memory/sc_addr.hpp>
+#include <sc-memory/sc_debug.hpp>
 #include <sc-memory/sc_iterator.hpp>
 #include <sc-memory/sc_keynodes.hpp>
 #include <sc-memory/sc_type.hpp>
@@ -313,14 +314,17 @@ void StateDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
                 if(context->CheckConnector(p, it5->Get(2), ScType::PermPosArc)){
                     return;
                 }
+                if(!type&&context->CheckConnector(p, Node, ScType::PermPosArc)&& p!=package){
+                    throw 1;
+                }
             }
             if(context->CheckConnector(package, it5->Get(2), ScType::PermPosArc)){
                 return;
             }
         }
+
         entitiesInCurrentPackage+="state "+context->GetElementSystemIdentifier(Node)+"{\n}\n";
     }
-   
 }
 
 std::vector<std::pair<ScAddr, int>> StateDiagramBuilder::FindEntryPoints(ScAddr action,ScAddr package)
