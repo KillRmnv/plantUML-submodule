@@ -45,12 +45,14 @@ public:
 
   static inline ScKeynode const concept_entity{"concept_entity", ScType::ConstNodeClass};
   static inline ScKeynode const concept_attribute{"concept_attribute", ScType::ConstNodeClass};
-  static inline ScKeynode const concept_attrconcept_optional_attributeibute{"concept_optional_attribute", ScType::ConstNodeClass};
+  static inline ScKeynode const concept_optional_attribute{"concept_optional_attribute", ScType::ConstNodeClass};
   static inline ScKeynode const concept_key_attribute{"concept_key_attribute", ScType::ConstNodeClass};
   static inline ScKeynode const concept_one_to_one{"concept_one_to_one", ScType::ConstNodeClass};
   static inline ScKeynode const concept_one_to_many{"concept_one_to_many", ScType::ConstNodeClass};
   static inline ScKeynode const concept_many_to_one{"concept_many_to_one", ScType::ConstNodeClass};
   static inline ScKeynode const concept_many_to_many{"concept_many_to_many", ScType::ConstNodeClass};
+  static inline ScKeynode const concept_weak_entity{"concept_weak_entity", ScType::ConstNodeClass};
 
+  static inline ScKeynode const nrel_identifying_relationship{"nrel_identifying_relationship", ScType::ConstNodeNonRole};
 
 };
