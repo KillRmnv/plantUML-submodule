@@ -7,4 +7,4 @@ This project requires:
 - Java Runtime Environment (JRE) 8+ (required for PlantUML rendering)
 - Graphviz (dot)
 
-PlantUML PNG generation will not work without Java installed.Only PlantUML code will be generated.
+PlantUML PNG generation will not work without Java installed.

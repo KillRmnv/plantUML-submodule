@@ -1,9 +1,11 @@
+#ifndef E880379C_8752_4327_BDEC_4CFBE899C1DB
+#define E880379C_8752_4327_BDEC_4CFBE899C1DB
 #pragma once 
 #include <string>
 #include <utility> 
 
- #include "ParticularDiagramBuilder.hpp"
- #include "DiagramBuilder.hpp"
+ #include "common/ParticularDiagramBuilder.hpp"
+ #include "common/DiagramBuilder.hpp"
 #include <vector>
 using namespace std;
 class StateDiagramBuilder : public ParticularDiagramBuilder
@@ -43,3 +45,6 @@ private:
     ScAddrToValueUnorderedMap<int> priorities;
 
 };
+
+
+#endif /* E880379C_8752_4327_BDEC_4CFBE899C1DB */

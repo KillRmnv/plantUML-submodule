@@ -4,14 +4,16 @@
  * COPYING.MIT or copy at http://opensource.org/licenses/MIT)
  */
 
-#pragma once
+#ifndef BF1713E5_2E50_420B_9DDC_4A4A55CBEE35
+#define BF1713E5_2E50_420B_9DDC_4A4A55CBEE35
+
 
 #include <sc-memory/sc_agent.hpp>
 
-class UseCaseDiagramAgent : public ScActionInitiatedAgent
+class ErDiagramAgent : public ScActionInitiatedAgent
 {
 public:
-  UseCaseDiagramAgent();
+  ErDiagramAgent();
 
   ScAddr GetActionClass() const override;
 
@@ -19,3 +21,6 @@ public:
 
 
 };
+
+
+#endif /* BF1713E5_2E50_420B_9DDC_4A4A55CBEE35 */

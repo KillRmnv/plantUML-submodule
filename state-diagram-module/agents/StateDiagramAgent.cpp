@@ -7,7 +7,7 @@
 #include <sc-agents-common/utils/IteratorUtils.hpp>
 #include "StateDiagramAgent.hpp"
 #include <sc-memory/sc_type.hpp>
-#include "common/StateDiagramBuilder.hpp"
+#include "builder/StateDiagramBuilder.hpp"
 #include "common/PlantUmlPngGenerator.hpp"
 
 // #include "common/StateDiagramBuilder.hpp"

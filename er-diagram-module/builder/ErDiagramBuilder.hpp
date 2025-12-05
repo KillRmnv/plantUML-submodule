@@ -1,11 +1,13 @@
+#ifndef E164795F_4231_4185_B75A_4A5F94B86E68
+#define E164795F_4231_4185_B75A_4A5F94B86E68
 #pragma once 
 #include <string>
 #include <utility> 
 #include <set>
 #include <sc-memory/sc_addr.hpp>
 
-#include "ParticularDiagramBuilder.hpp"
-#include "DiagramBuilder.hpp"
+#include "common/ParticularDiagramBuilder.hpp"
+#include "common/DiagramBuilder.hpp"
 using namespace std;
 
 class ErDiagramBuilder : public ParticularDiagramBuilder{
@@ -36,3 +38,6 @@ private:
     std::set<ScAddr> usedRelationships; 
 
 };
+
+
+#endif

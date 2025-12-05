@@ -8,7 +8,7 @@
 
 
 #include <sc-agents-common/utils/IteratorUtils.hpp>
-#include "common/UseCaseDiagramBuilder.hpp"
+#include "builder/UseCaseDiagramBuilder.hpp"
 #include "common/PlantUmlPngGenerator.hpp"
 #include "keynodes/Keynodes.hpp"
 

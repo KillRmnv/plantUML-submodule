@@ -1,9 +1,11 @@
+#ifndef C974FD10_B617_4AC4_9E70_53C4B4560763
+#define C974FD10_B617_4AC4_9E70_53C4B4560763
 #pragma once 
 #include <sc-memory/sc_addr.hpp>
 #include <string>
 
-#include "ParticularDiagramBuilder.hpp"
-#include "DiagramBuilder.hpp"
+#include "common/ParticularDiagramBuilder.hpp"
+#include "common/DiagramBuilder.hpp"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -79,3 +81,6 @@ private:
     ScAddrToValueUnorderedMap<std::string> nameByStruct;
     ScAddrToValueUnorderedMap<ScAddrSet> actorsToActions;
 };
+
+
+#endif /* C974FD10_B617_4AC4_9E70_53C4B4560763 */

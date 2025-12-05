@@ -6,8 +6,6 @@
 #include <sc-memory/sc_type.hpp>
 #include "keynodes/Keynodes.hpp"
 #include <unordered_map>
-#include <sc-memory/cpp/sc_memory.hpp>
-#include <sc-memory/cpp/sc_iterator.hpp>
 #include <string>
 #include <vector>
 
@@ -43,7 +41,7 @@ std::vector<ScAddr> ErDiagramBuilder::GetAttributes(ScAddr entity)
     );
     while (it->Next()) {
         ScAddr candidate = it->Get(2);
-        if (context->CheckConnector(ScKeynodes::concept_attribute, 
+        if (context->CheckConnector(Keynodes::concept_attribute, 
                                     candidate,
                                     ScType::ConstPermPosArc))
             attrs.push_back(candidate);
@@ -53,14 +51,14 @@ std::vector<ScAddr> ErDiagramBuilder::GetAttributes(ScAddr entity)
 
 bool ErDiagramBuilder::IsOptional(ScAddr attr)
 {
-    return context->CheckConnector(ScKeynodes::concept_optional_attribute, 
+    return context->CheckConnector(Keynodes::concept_optional_attribute, 
                                     attr,
                                     ScType::ConstPermPosArc);
 }
 
 bool ErDiagramBuilder::IsRequired(ScAddr attr)
 {
-    return context->CheckConnector(ScKeynodes::concept_key_attribute, 
+    return context->CheckConnector(Keynodes::concept_key_attribute, 
                                     attr,
                                     ScType::ConstPermPosArc);
 }
@@ -75,7 +73,7 @@ std::vector<ScAddr> ErDiagramBuilder::GetChildAttributes(ScAddr attr)
     );
     while (it->Next()) {
         ScAddr candidate = it->Get(2);
-        if (context->CheckConnector(ScKeynodes::concept_attribute, 
+        if (context->CheckConnector(Keynodes::concept_attribute, 
                                     candidate,
                                     ScType::ConstPermPosArc))
             child.push_back(candidate);
@@ -93,12 +91,12 @@ std::string ErDiagramBuilder::ChenCardinality(ScAddr relNode)
     
     std::string card = "---";
 
-    if (context->CheckConnector(ScKeynodes::concept_one_to_one, relNode, ScType::ConstPermPosArc))
+    if (context->CheckConnector(Keynodes::concept_one_to_one, relNode, ScType::ConstPermPosArc))
         card = "-1-";
-    else if (context->CheckConnector(ScKeynodes::concept_one_to_many, relNode, ScType::ConstPermPosArc) ||
-             context->CheckConnector(ScKeynodes::concept_many_to_one, relNode, ScType::ConstPermPosArc))
+    else if (context->CheckConnector(Keynodes::concept_one_to_many, relNode, ScType::ConstPermPosArc) ||
+             context->CheckConnector(Keynodes::concept_many_to_one, relNode, ScType::ConstPermPosArc))
         card = "-N-"; 
-    else if (context->CheckConnector(ScKeynodes::concept_many_to_many, relNode, ScType::ConstPermPosArc))
+    else if (context->CheckConnector(Keynodes::concept_many_to_many, relNode, ScType::ConstPermPosArc))
         card = "-N-";
 
     if (isIdentifying) {
@@ -117,7 +115,7 @@ std::string ErDiagramBuilder::MakeEntityBlock(ScAddr entity)
     std::string name = context->GetElementSystemIdentifier(entity); 
 
     bool isWeak = context->CheckConnector( 
-        ScKeynodes::concept_weak_entity,
+        Keynodes::concept_weak_entity,
         entity,
         ScType::ConstPermPosArc);
 
@@ -129,7 +127,7 @@ std::string ErDiagramBuilder::MakeEntityBlock(ScAddr entity)
     for (ScAddr attr : GetAttributes(entity)) {
         std::string attr_name = context->GetElementSystemIdentifier(attr); 
 
-        if (context->CheckConnector(ScKeynodes::concept_key_attribute, 
+        if (context->CheckConnector(Keynodes::concept_key_attribute, 
                                     attr,
                                     ScType::ConstPermPosArc))
             attr_name += " <<key>>";
@@ -143,7 +141,7 @@ std::string ErDiagramBuilder::MakeEntityBlock(ScAddr entity)
             for (ScAddr child : children) {
                 std::string child_name = context->GetElementSystemIdentifier(child); 
 
-                if (context->CheckConnector(ScKeynodes::concept_key_attribute, 
+                if (context->CheckConnector(Keynodes::concept_key_attribute, 
                                             child,
                                             ScType::ConstPermPosArc))
                     child_name += " <<key>>";
@@ -188,7 +186,7 @@ std::string ErDiagramBuilder::MakeRelationshipBlock(ScAddr relNode)
 
 void ErDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
 {
-    if (context->CheckConnector(ScKeynodes::concept_entity, Node, ScType::ConstPermPosArc))
+    if (context->CheckConnector(Keynodes::concept_entity, Node, ScType::ConstPermPosArc))
     {
         if (usedNodes->find(Node) == usedNodes->end())
         {
@@ -214,7 +212,7 @@ void ErDiagramBuilder::ProcessAdjacentNodes(ScAddr Node, ScAddr package)
         ScAddr entity2 = it5->Get(2);
         ScAddr relNode = it5->Get(4);
         
-        if (!context->CheckConnector(ScKeynodes::concept_entity, entity2, ScType::ConstPermPosArc))
+        if (!context->CheckConnector(Keynodes::concept_entity, entity2, ScType::ConstPermPosArc))
             continue;
         
         std::string e1_name = context->GetElementSystemIdentifier(Node);

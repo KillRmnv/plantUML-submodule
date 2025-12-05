@@ -4,15 +4,10 @@
  * (See accompanying file COPYING.MIT or copy at http://opensource.org/licenses/MIT)
  */
 
-#ifndef C09090DA_0FB6_4716_8C26_ED2545F5E4A6
-#define C09090DA_0FB6_4716_8C26_ED2545F5E4A6
-
+#pragma once
 
 #include <sc-memory/sc_module.hpp>
 
-class PlantUMLModule : public ScModule
+class StateDiagramModule : public ScModule
 {
 };
-
-
-#endif /* C09090DA_0FB6_4716_8C26_ED2545F5E4A6 */

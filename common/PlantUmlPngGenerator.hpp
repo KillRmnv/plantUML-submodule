@@ -1,4 +1,5 @@
-#pragma once
+#ifndef A608D739_0E97_438E_AEA0_667A95CBD50B
+#define A608D739_0E97_438E_AEA0_667A95CBD50B
 
 #include <string>
 #include <vector>
@@ -34,3 +35,6 @@ public:
     ScMemoryContext* GetContext() const { return context; }
     utils::ScLogger* GetLogger() const { return m_logger; }
 };
+
+
+#endif /* A608D739_0E97_438E_AEA0_667A95CBD50B */

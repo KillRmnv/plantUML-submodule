@@ -4,14 +4,16 @@
  * COPYING.MIT or copy at http://opensource.org/licenses/MIT)
  */
 
-#pragma once
+#ifndef C62835DC_2BAA_4144_A202_4763809FC3AA
+#define C62835DC_2BAA_4144_A202_4763809FC3AA
+
 
 #include <sc-memory/sc_agent.hpp>
 
-class ErDiagramAgent : public ScActionInitiatedAgent
+class UseCaseDiagramAgent : public ScActionInitiatedAgent
 {
 public:
-  ErDiagramAgent();
+  UseCaseDiagramAgent();
 
   ScAddr GetActionClass() const override;
 
@@ -19,3 +21,6 @@ public:
 
 
 };
+
+
+#endif /* C62835DC_2BAA_4144_A202_4763809FC3AA */
