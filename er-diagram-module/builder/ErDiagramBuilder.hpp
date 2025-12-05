@@ -9,7 +9,7 @@
 #include "common/DiagramBuilder.hpp"
 using namespace std;
 
-class ErDiagramBuilder : public ParticularDiagramBuilder{
+class ErDiagramBuilder : public BaseDiagramBuilder{
 public:
     explicit ErDiagramBuilder(ScMemoryContext * context, utils::ScLogger * logger);
 
@@ -33,7 +33,7 @@ private:
     std::string entities_;
     std::string relationships_;
     std::string relations_;
-    std::set<ScAddr> usedRelationships; 
+    ScAddrSet usedRelationships; 
 
 };
 
