@@ -4,11 +4,11 @@
 #include <string>
 #include <utility> 
 
- #include "common/ParticularDiagramBuilder.hpp"
+ #include "common/PackageDiagramBuilder.hpp"
  #include "common/DiagramBuilder.hpp"
 #include <vector>
 using namespace std;
-class StateDiagramBuilder : public ParticularDiagramBuilder
+class StateDiagramBuilder : public PackageDiagramBuilder
 {
 
 

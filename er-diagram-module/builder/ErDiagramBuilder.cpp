@@ -10,7 +10,7 @@
 #include <vector>
 
 ErDiagramBuilder::ErDiagramBuilder(ScMemoryContext * context, utils::ScLogger * logger)
-    : ParticularDiagramBuilder(context, logger)
+    : BaseDiagramBuilder(context, logger)
 {
     
     entities_ = "";

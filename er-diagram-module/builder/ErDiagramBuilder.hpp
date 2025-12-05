@@ -1,12 +1,11 @@
-#ifndef E164795F_4231_4185_B75A_4A5F94B86E68
-#define E164795F_4231_4185_B75A_4A5F94B86E68
+
 #pragma once 
 #include <string>
 #include <utility> 
 #include <set>
 #include <sc-memory/sc_addr.hpp>
 
-#include "common/ParticularDiagramBuilder.hpp"
+#include "common/BaseDiagramBuilder.hpp"
 #include "common/DiagramBuilder.hpp"
 using namespace std;
 
@@ -17,7 +16,6 @@ public:
     void ProcessNode(ScAddr Node,ScAddr package) override;
     void ProcessEdgesByNode(ScAddr Node,ScAddr package) override {} 
     void ProcessAdjacentNodes(ScAddr Node,ScAddr package) override;
-    void ProcessPackage(ScAddr package) override {};
 
     std::string GetResultString() override;
 
@@ -40,4 +38,3 @@ private:
 };
 
 
-#endif

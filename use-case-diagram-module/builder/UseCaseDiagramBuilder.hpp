@@ -4,7 +4,7 @@
 #include <sc-memory/sc_addr.hpp>
 #include <string>
 
-#include "common/ParticularDiagramBuilder.hpp"
+#include "common/PackageDiagramBuilder.hpp"
 #include "common/DiagramBuilder.hpp"
 
 #include <unordered_map>
@@ -43,7 +43,7 @@ struct ScAddrTripleEq
 };
 
 
-class UseCaseDiagramBuilder : public ParticularDiagramBuilder
+class UseCaseDiagramBuilder : public PackageDiagramBuilder
 {
 public:
     UseCaseDiagramBuilder(ScMemoryContext * context, utils::ScLogger * logger);
