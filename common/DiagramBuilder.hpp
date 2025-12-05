@@ -1,8 +1,8 @@
 #pragma once
-#include "ParticularDiagramBuilder.hpp"
+#include "BaseDiagramBuilder.hpp"
  class DiagramBuilder{
     public:
-    void generateStructure(std::shared_ptr<ParticularDiagramBuilder> builder,ScAddr diagram);
+    void generateStructure(std::shared_ptr<BaseDiagramBuilder> builder,ScAddr diagram);
 };
 
 

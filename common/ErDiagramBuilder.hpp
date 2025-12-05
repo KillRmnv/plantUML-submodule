@@ -4,18 +4,17 @@
 #include <set>
 #include <sc-memory/sc_addr.hpp>
 
-#include "ParticularDiagramBuilder.hpp"
+#include "BaseDiagramBuilder.hpp"
 #include "DiagramBuilder.hpp"
 using namespace std;
 
-class ErDiagramBuilder : public ParticularDiagramBuilder{
+class ErDiagramBuilder : public BaseDiagramBuilder{
 public:
     explicit ErDiagramBuilder(ScMemoryContext * context, utils::ScLogger * logger);
 
     void ProcessNode(ScAddr Node,ScAddr package) override;
     void ProcessEdgesByNode(ScAddr Node,ScAddr package) override {} 
     void ProcessAdjacentNodes(ScAddr Node,ScAddr package) override;
-    void ProcessPackage(ScAddr package) override {};
 
     std::string GetResultString() override;
 
