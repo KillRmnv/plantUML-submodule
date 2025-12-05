@@ -11,7 +11,7 @@
 
 
 UseCaseDiagramBuilder::UseCaseDiagramBuilder(ScMemoryContext * context, utils::ScLogger * logger)
-    : ParticularDiagramBuilder( context, logger)
+    : PackageDiagramBuilder( context, logger)
 {
 }
 std::string UseCaseDiagramBuilder::trim(const std::string &s)

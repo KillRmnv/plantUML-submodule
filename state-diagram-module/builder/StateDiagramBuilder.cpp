@@ -11,7 +11,7 @@
 #include "keynodes/Keynodes.hpp"
 
 StateDiagramBuilder::StateDiagramBuilder(ScMemoryContext * context, utils::ScLogger * logger)
-    : ParticularDiagramBuilder( context, logger)
+    : PackageDiagramBuilder( context, logger)
 {
     priorities[Keynodes::nrel_priority_path]=4;
     priorities[Keynodes::nrel_then]=3;
