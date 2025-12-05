@@ -20,9 +20,9 @@ ErDiagramBuilder::ErDiagramBuilder(ScMemoryContext * context, utils::ScLogger * 
     relations_ = "";
 }
 
-std::vector<ScAddr> ErDiagramBuilder::GetClassMembers(ScAddr class_node)
+ScAddrVector ErDiagramBuilder::GetClassMembers(ScAddr class_node)
 {
-    std::vector<ScAddr> items;
+    ScAddrVector items;
     auto it = context->CreateIterator3( 
         class_node,
         ScType::ConstPermPosArc,
@@ -33,9 +33,9 @@ std::vector<ScAddr> ErDiagramBuilder::GetClassMembers(ScAddr class_node)
     return items;
 }
 
-std::vector<ScAddr> ErDiagramBuilder::GetAttributes(ScAddr entity)
+ScAddrVector ErDiagramBuilder::GetAttributes(ScAddr entity)
 {
-    std::vector<ScAddr> attrs;
+    ScAddrVector attrs;
     auto it = context->CreateIterator3( 
         entity,
         ScType::ConstPermPosArc,
@@ -65,9 +65,9 @@ bool ErDiagramBuilder::IsRequired(ScAddr attr)
                                     ScType::ConstPermPosArc);
 }
 
-std::vector<ScAddr> ErDiagramBuilder::GetChildAttributes(ScAddr attr)
+ScAddrVector ErDiagramBuilder::GetChildAttributes(ScAddr attr)
 {
-    std::vector<ScAddr> child;
+    ScAddrVector child;
     auto it = context->CreateIterator3( 
         attr,
         ScType::ConstPermPosArc,

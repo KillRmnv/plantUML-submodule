@@ -32,6 +32,6 @@ private:
     std::string entities_;
     std::string relationships_;
     std::string relations_;
-    std::set<ScAddr> usedRelationships; 
+    ScAddrSet usedRelationships; 
 
 };
