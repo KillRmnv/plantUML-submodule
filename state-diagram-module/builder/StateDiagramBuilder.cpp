@@ -2,6 +2,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+
 #include "StateDiagramBuilder.hpp"
 #include <sc-memory/sc_addr.hpp>
 #include <sc-memory/sc_debug.hpp>
