@@ -12,7 +12,7 @@
 ErDiagramBuilder::ErDiagramBuilder(ScMemoryContext * context, utils::ScLogger * logger)
     : BaseDiagramBuilder(context, logger)
 {
-    
+    m_logger->Debug("ErDiagramBuilder: Initialized.");
     entities_ = "";
     relationships_ = "";
     relations_ = "";
@@ -28,6 +28,9 @@ ScAddrVector ErDiagramBuilder::GetClassMembers(ScAddr class_node)
     );
     while (it->Next())
         items.push_back(it->Get(2));
+
+    m_logger->Debug("GetClassMembers: Found " + std::to_string(items.size()) + " members.");
+
     return items;
 }
 
@@ -46,6 +49,9 @@ ScAddrVector ErDiagramBuilder::GetAttributes(ScAddr entity)
                                     ScType::ConstPermPosArc))
             attrs.push_back(candidate);
     }
+
+    m_logger->Debug("GetAttributes: Found " + std::to_string(attrs.size()) + " attributes for entity " + std::to_string(entity.Hash()));
+
     return attrs;
 }
 
@@ -109,10 +115,11 @@ std::string ErDiagramBuilder::ChenCardinality(ScAddr relNode)
     return card;
 }
 
-
 std::string ErDiagramBuilder::MakeEntityBlock(ScAddr entity)
 {
     std::string name = context->GetElementSystemIdentifier(entity); 
+
+    m_logger->Debug("MakeEntityBlock: Generating block for " + name);
 
     bool isWeak = context->CheckConnector( 
         Keynodes::concept_weak_entity,
@@ -166,6 +173,8 @@ std::string ErDiagramBuilder::MakeRelationshipBlock(ScAddr relNode)
     std::string name = context->GetElementSystemIdentifier(relNode);
     if (name.empty()) return "";
 
+    m_logger->Debug("MakeRelationshipBlock: Generating block for " + name);
+    
     std::string block = "relationship " + name;
     
     
@@ -186,6 +195,9 @@ std::string ErDiagramBuilder::MakeRelationshipBlock(ScAddr relNode)
 
 void ErDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
 {
+    std::string nodeName = context->GetElementSystemIdentifier(Node);
+    m_logger->Debug("ProcessNode: Inspecting node " + nodeName);
+
     if (context->CheckConnector(Keynodes::concept_entity, Node, ScType::ConstPermPosArc))
     {
         if (usedNodes->find(Node) == usedNodes->end())
@@ -200,6 +212,9 @@ void ErDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
 
 void ErDiagramBuilder::ProcessAdjacentNodes(ScAddr Node, ScAddr package)
 {
+    std::string startNodeName = context->GetElementSystemIdentifier(Node);
+    m_logger->Debug("ProcessAdjacentNodes: Starting search from " + startNodeName);
+
     ScIterator5Ptr it5 = context->CreateIterator5(
         Node,
         ScType::ConstCommonArc,
@@ -219,10 +234,14 @@ void ErDiagramBuilder::ProcessAdjacentNodes(ScAddr Node, ScAddr package)
         std::string e2_name = context->GetElementSystemIdentifier(entity2);
         std::string rel_name = context->GetElementSystemIdentifier(relNode);
 
+        m_logger->Debug("ProcessAdjacentNodes: Found Arc. Relation: " + rel_name + " -> Target: " + e2_name);
+
         if (e1_name.empty() || e2_name.empty() || rel_name.empty())
+            m_logger->Debug("ProcessAdjacentNodes: One of identifiers is empty. Skipping.");
             continue;
             
         if (usedRelationships.find(relNode) == usedRelationships.end()) {
+            m_logger->Debug("ProcessAdjacentNodes: New Relationship found: " + rel_name + ". Making block.");
             relationships_ += MakeRelationshipBlock(relNode);
             usedRelationships.insert(relNode);
         }
@@ -235,10 +254,12 @@ void ErDiagramBuilder::ProcessAdjacentNodes(ScAddr Node, ScAddr package)
 
         
         if (e1_name < e2_name) {
-             relations_ += line1;
-             relations_ += line2;
+            m_logger->Debug("ProcessAdjacentNodes: Adding lines for " + rel_name);
+            relations_ += line1;
+            relations_ += line2;
         } else if (e1_name == e2_name) {
-             relations_ += line1; 
+            m_logger->Debug("ProcessAdjacentNodes: Adding recursive lines for " + rel_name);
+            relations_ += line1; 
         }
     }
 }
@@ -247,6 +268,7 @@ void ErDiagramBuilder::ProcessAdjacentNodes(ScAddr Node, ScAddr package)
 // --- ФИНАЛЬНАЯ СБОРКА РЕЗУЛЬТАТА ---
 std::string ErDiagramBuilder::GetResultString()
 {
+    m_logger->Debug("GetResultString: Assembling result.");
     std::string result = "@startchen\n";
     result += "left to right direction\n\n";
 
