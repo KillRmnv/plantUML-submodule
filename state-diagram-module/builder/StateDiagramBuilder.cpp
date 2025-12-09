@@ -16,6 +16,8 @@
 StateDiagramBuilder::StateDiagramBuilder(ScMemoryContext * context, utils::ScLogger * logger)
     : PackageDiagramBuilder( context, logger)
 {
+    /// Инициализация весов отношений для определения порядка обхода переходов.
+    /// Чем выше значение, тем выше приоритет ветви при генерации.
     priorities[Keynodes::nrel_priority_path]=4;
     priorities[Keynodes::nrel_then]=3;
     priorities[Keynodes::nrel_else]=2;
@@ -61,7 +63,7 @@ std::string StateDiagramBuilder::AddEntitiesAndTransitions(ScAddrVector comb,ScA
             conditionCounter++;
         }
     
-    
+    // Обработка остальных элементов комбинации
     for(int i=1;i<comb.size();i++){
         pair=context->GetConnectorIncidentElements(comb[i]);
         nodeInPosssiblePath=nodes[get<1>(pair)].front()+"_pp"+to_string(num);
@@ -99,6 +101,7 @@ std::string StateDiagramBuilder::AddEntitiesAndTransitions(ScAddrVector comb,ScA
 return combStr;
 }
 
+/// @details Утилитарная функция для обрезки системных префиксов (nrel_, rrel_ и т.д.)
 std::string trim(const std::string &s)
 {
     std::string result = s;
@@ -124,6 +127,8 @@ std::string trim(const std::string &s)
     return result;
 };
 
+/// @details Генерирует уникальное имя для состояния выбора (choice) на основе счетчика,
+/// если обнаружен системный идентификатор условия.
 std::pair<std::string,std::string> StateDiagramBuilder::ProcessCondition(ScAddr Condition,ScAddr Node){
     std::string sysIdentifier=context->GetElementSystemIdentifier(Condition);
     std::pair<std::string,std::string> result;
@@ -145,6 +150,7 @@ std::pair<std::string,std::string> StateDiagramBuilder::ProcessCondition(ScAddr 
     
     return result;
 }
+
 std::string trim_spaces(std::string str)
 {
     // Убедимся, что trim_spaces корректно удаляет пробелы
@@ -153,6 +159,9 @@ std::string trim_spaces(std::string str)
     return str;
 }
 
+/// @details Анализирует сгенерированный строковый буфер PlantUML (entities + relations),
+/// выявляет узлы, у которых есть входящие, но нет исходящих связей,
+/// и принудительно завершает их переходом в конечное состояние [*].
 std::string StateDiagramBuilder::Termination(){
     std::unordered_map<std::string, int> outgoingCounts;
     std::unordered_set<std::string> entitiesWithIncoming;
@@ -162,6 +171,7 @@ std::string StateDiagramBuilder::Termination(){
     std::stringstream ss(entitiesInCurrentPackage+relations);
     std::string line;
 
+    // Парсинг текущего текста диаграммы для построения графа связности
     while (std::getline(ss, line, '\n')) {
         size_t arrow_pos = line.find("-->");
         if (arrow_pos == std::string::npos) {
@@ -198,6 +208,7 @@ std::string StateDiagramBuilder::Termination(){
         bool has_incoming = entitiesWithIncoming.count(entity);
         bool has_no_outgoing = (out_count == 0);
         
+        // Если есть вход, но нет выхода -> конец потока управления
         if (has_incoming && has_no_outgoing) {
             result += entity + " --> [*]" + "\n";
             continue; 
@@ -207,6 +218,7 @@ std::string StateDiagramBuilder::Termination(){
         
         bool has_one_outgoing = (out_count == 1);
         
+        // Choice-узлы с одним выходом также считаем терминальными для данной ветки
         if (is_choice && has_one_outgoing) {
             result += entity + " --> [*]" + "\n";
         }
@@ -214,6 +226,9 @@ std::string StateDiagramBuilder::Termination(){
     
     return result;
 }
+
+/// @details Итерируется по декомпозиции (nrel_decomposition_of_action) пакета,
+/// формирует state-блоки и вызывает финализацию (Termination) для текущего уровня вложенности.
 void StateDiagramBuilder::ProcessPackage(ScAddr package) {
     ScIterator3Ptr it3=context->CreateIterator3(package, ScType::ConstPermPosArc,ScType::NodeTuple);
     ScIterator5Ptr it5internal;
@@ -254,6 +269,7 @@ std::vector<ScAddrVector> StateDiagramBuilder::FindSequence(
     
     m_logger->Debug("form graph finished");
 
+    // Рекурсивная лямбда для обхода в глубину
     std::function<void(ScAddr, ScAddrVector&, std::unordered_set<ScAddr, ScAddrHashFunc>&)> dfs;
 
     dfs = [&](ScAddr node, ScAddrVector &path, 
@@ -296,6 +312,9 @@ std::vector<ScAddrVector> StateDiagramBuilder::FindSequence(
 
     return result;
 }
+
+/// @details Проверяет, является ли узел действием (action) и не принадлежит ли он 
+/// декомпозиции другого пакета. Если проверка пройдена, добавляет узел в список processed.
 void StateDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
 {
     if(usedNodes->find(Node)==usedNodes->end() && 
@@ -334,6 +353,8 @@ void StateDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
     }
 }
 
+/// @details Находит точки входа (start nodes) в декомпозиции действия, 
+/// учитывая роли (приоритеты) связей. Сортирует результат по приоритету.
 std::vector<std::pair<ScAddr, int>> StateDiagramBuilder::FindEntryPoints(ScAddr action,ScAddr package)
 {
     ScIterator5Ptr it5 = context->CreateIterator5(
@@ -365,6 +386,8 @@ std::vector<std::pair<ScAddr, int>> StateDiagramBuilder::FindEntryPoints(ScAddr 
     return result;
 }
 
+/// @details Группирует последовательности действий по равным приоритетам
+/// для корректного отображения параллельных или альтернативных веток.
 std::vector<std::vector<int>> StateDiagramBuilder::FormEqualPrioritiesSequences(
     std::vector<ScAddrVector> sequences,
     std::vector<std::pair<ScAddr, int>> entries)
@@ -403,6 +426,8 @@ std::vector<std::vector<int>> StateDiagramBuilder::FormEqualPrioritiesSequences(
     return result;
 }
 
+/// @details Обрабатывает ребро графа, извлекая привязанные к нему условия (структуры),
+/// и формирует текстовое описание перехода с условием (:satisfy ...).
 void StateDiagramBuilder::ProcessEdge(ScAddr edge,ScAddr Node){
     m_logger->Debug("Process edge by node: "+context->GetElementSystemIdentifier(Node));
     std::pair<std::string,std::string> condition;
@@ -419,6 +444,9 @@ void StateDiagramBuilder::ProcessEdge(ScAddr edge,ScAddr Node){
             }
         }
 }
+
+/// @details Итерируется по всем исходящим дугам узла в рамках пакета.
+/// Фильтрует уже обработанные ребра и вызывает ProcessEdge.
 void StateDiagramBuilder::ProcessEdgesByNode(ScAddr Node,ScAddr package)
 {
     if(context->CheckConnector(ScKeynodes::action,Node, 
@@ -447,6 +475,9 @@ void StateDiagramBuilder::ProcessEdgesByNode(ScAddr Node,ScAddr package)
         }
 }
 //TODO:refactor
+/// @details Основной метод обработки смежных узлов.
+/// Координирует поиск входов, построение последовательностей (Sequence),
+/// группировку по приоритетам и генерацию сложной логики переходов (включая ветвления).
 void StateDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
 {
     if(context->CheckConnector(ScKeynodes::action, Node,ScType::PermPosArc)){
@@ -457,6 +488,8 @@ void StateDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
                 return;
             }
         }
+        
+        // Поиск смежных действий через NodeNonRole
          it5=context->CreateIterator5(Node, ScType::CommonArc, 
             ScType::Node, ScType::PosArc, ScType::NodeNonRole);
             m_logger->Debug("processing :"+context->GetElementSystemIdentifier(Node));
@@ -472,6 +505,8 @@ void StateDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
             }
         }
         m_logger->Debug("trying to find entries:"+context->GetElementSystemIdentifier(Node));
+        
+        // Поиск и обработка последовательностей выполнения
         std::vector<std::pair<ScAddr, int>> entries=FindEntryPoints(Node,package);
         for(auto p:entries){
             m_logger->Debug("entry:"+context->GetElementSystemIdentifier(p.first)+" value:"+to_string(p.second));
@@ -497,6 +532,7 @@ void StateDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
             }
         }
         std::string condition;
+        // Генерация переходов для каждой группы последовательностей
         for (int sequence=0;sequence<equalSequences.size();sequence++){
             for(int i=0;i<equalSequences[sequence].size();i++){
                 m_logger->Debug("processing equal sequence "+to_string(sequence));
@@ -591,6 +627,9 @@ ScAddrVector StateDiagramBuilder::CaptureTuple(ScAddr structure){
     return tuples;
 };
 //TODO:refactor
+/// @details Собирает все пакеты, участвующие в диаграмме.
+/// Определяет иерархию вложенности пакетов на основе пересечения множеств действий.
+/// Формирует начальные переходы (entry) для вложенных структур.
 std::shared_ptr<ScAddrSet> StateDiagramBuilder::GetAllPackages(ScAddr diagram)
 {   
     ScIterator3Ptr it3struct=context->CreateIterator3(diagram, ScType::ConstPermPosArc,ScType::ConstNodeStructure);
@@ -718,6 +757,8 @@ std::string StateDiagramBuilder::GetResultString()
     return "@startuml\n"+preamble+entities+entitiesInCurrentPackage+relations+"\n@enduml";
 }
 
+/// @details Проверяет, содержит ли пакет вложенные структуры (через rrel_entry),
+/// которые требуют рекурсивной обработки.
 bool StateDiagramBuilder::PackageCheck(ScAddr package,ScAddr parent) {
     ScIterator5Ptr it5=context->CreateIterator5(package, ScType::PosArc,ScType::NodeStructure,ScType::PosArc,Keynodes::rrel_entry);
     ScIterator5Ptr it5internal;
@@ -738,3 +779,4 @@ bool StateDiagramBuilder::PackageCheck(ScAddr package,ScAddr parent) {
     return false;
     
 }
+
