@@ -9,11 +9,14 @@
 #include <sc-memory/sc_type.hpp>
 #include "keynodes/Keynodes.hpp"
 
-
+/// Delegates construction to the base PackageDiagramBuilder.
 UseCaseDiagramBuilder::UseCaseDiagramBuilder(ScMemoryContext * context, utils::ScLogger * logger)
     : PackageDiagramBuilder( context, logger)
 {
 }
+
+/// Iteratively removes known semantic prefixes ("nrel_", "rrel_", "concept_") 
+/// to produce clean identifier names for the diagram.
 std::string UseCaseDiagramBuilder::trim(const std::string &s)
 {
     std::string result = s;
@@ -39,6 +42,7 @@ std::string UseCaseDiagramBuilder::trim(const std::string &s)
     return result;
 };
 
+/// Removes leading and trailing whitespaces from the string.
 std::string UseCaseDiagramBuilder::trim_spaces(std::string str)
 {
     str.erase(str.find_last_not_of(' ') + 1);  
@@ -46,6 +50,9 @@ std::string UseCaseDiagramBuilder::trim_spaces(std::string str)
     return str;
 }
 
+/// Finalizes the PlantUML package block. Appends the accumulated entities 
+/// (actors/usecases) of the current scope to the global entity list 
+/// and clears the buffer for the next package.
 void UseCaseDiagramBuilder::ProcessPackage(ScAddr package) {
 entities+="package "+trim(context->GetElementSystemIdentifier(package))+"{\n"+entitiesInCurrentPackage+
     "}\n";
@@ -54,6 +61,9 @@ entities+="package "+trim(context->GetElementSystemIdentifier(package))+"{\n"+en
     entitiesInCurrentPackage="";
 }
 
+/// Validates if the node is a use case structure and not a nested package.
+/// Resolves the system identifier to a human-readable name, registers it 
+/// in the PlantUML buffer, and performs a level consistency check.
 void UseCaseDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
 {
             ScIterator5Ptr it5;
@@ -96,6 +106,9 @@ void UseCaseDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
             }
 }
 
+/// Analyzes the semantic relation type (extend, include, generalization, or actor association)
+/// and formats the corresponding PlantUML arrow syntax (e.g., ..>, --|>, -->).
+/// Ensures edges are not processed duplicates.
 void UseCaseDiagramBuilder::ProcessEdge(ScAddr edge,ScAddr relation,ScAddr package){
     if(usedEdges->find(edge)==usedEdges->end()){
         ScIterator5Ptr it5=context->CreateIterator5(ScType::NodeStructure, ScType::PosArc, edge, ScType::PosArc, package);
@@ -155,10 +168,16 @@ void UseCaseDiagramBuilder::ProcessEdge(ScAddr edge,ScAddr relation,ScAddr packa
         relations+=addition;
     }
 }
+
+/// Intentionally empty. Edge processing is handled via adjacent node traversal 
+/// to ensure semantic relations are captured correctly.
 void UseCaseDiagramBuilder::ProcessEdgesByNode(ScAddr Node,ScAddr package)
 {
     
 }
+
+/// Iterates through common arcs to find nodes semantically connected to the current Node.
+/// Triggers recursive processing for discovered nodes and their connecting edges.
 void UseCaseDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
 {
         ScIterator5Ptr it5=context->CreateIterator5(Node, ScType::CommonArc, 
@@ -177,6 +196,8 @@ void UseCaseDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
     
  }
 
+/// Scans the root diagram structure to identify first-level packages.
+/// Initializes the internal level counter and builds the initial PlantUML preamble.
 std::shared_ptr<ScAddrSet> UseCaseDiagramBuilder::GetAllPackages(ScAddr diagram)
 {   
     level++;
@@ -218,15 +239,23 @@ std::shared_ptr<ScAddrSet> UseCaseDiagramBuilder::GetAllPackages(ScAddr diagram)
 
     return packg;
 }
+
+/// Returns the accumulated set of processed nodes.
 std::shared_ptr<ScAddrSet> UseCaseDiagramBuilder::GetUsedNodes(ScAddr addr)
 {
     return usedNodes;
 }
+
+/// Concatenates the preamble, package entities, current package buffer, and relations
+/// into the final @startuml ... @enduml string.
 std::string UseCaseDiagramBuilder::GetResultString()
 {
     return "@startuml\n"+preamble+entities+entitiesInCurrentPackage+relations+"\n@enduml";
 }
 
+/// Checks if a package contains nested `concept_er_package` structures.
+/// If it is a leaf package, it maps the structure contents to the current hierarchy level.
+/// Returns true if recursion is needed, false otherwise.
 bool UseCaseDiagramBuilder::PackageCheck(ScAddr package,ScAddr parent) {
     if(!context->CheckConnector(Keynodes::concept_er_package, package,ScType::PosArc)){
         ScIterator5Ptr it5=context->CreateIterator5(ScType::NodeStructure, ScType::PosArc, 
