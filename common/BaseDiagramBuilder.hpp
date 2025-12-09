@@ -44,7 +44,6 @@ public:
   /// @brief Virtual destructor for proper cleanup
   virtual ~BaseDiagramBuilder();
 
-
   /// @brief Processes a single node from the knowledge structure.
   /// @param node The node address to process
   /// @param container The parent container (package/diagram)
