@@ -8,13 +8,12 @@
  #include <sc-builder/scs_loader.hpp>
  
  #include <sc-agents-common/utils/IteratorUtils.hpp>
- 
+  #include "../../../utils/sc-builder-local/src/gwf_translator.hpp"
+ #include "../../../utils/sc-builder-local/src/scs_translator.hpp"
 //  #include "agents/UseCaseDiagramAgent.hpp"
  #include "../../agents/UseCaseDiagramAgent.hpp"
  #include "keynodes/Keynodes.hpp"
- #include "utils/NumberUtils.hpp"
- 
- #include "utils/TestUtils.hpp"
+
  
  namespace UseCaseDiagramAgentTest
  {
@@ -25,6 +24,33 @@
  using UseCaseDiagramAgentTest = ScMemoryTest;
  
 
+ bool saveStringToFile(const std::string& fileName, const std::string& content)
+ {
+     std::ofstream outputFile(fileName);
+ 
+     if (outputFile.is_open())
+     {
+         outputFile << content;
+ 
+         outputFile.close();
+         
+         if (outputFile.fail())
+         {
+             std::cerr << "Error writing to file: " << fileName << std::endl;
+             return false;
+         }
+ 
+         std::cout << "Successfully saved content to: " << fileName << std::endl;
+         return true;
+     }
+     else
+     {
+         
+         std::cerr << "Unable to open file for writing: " << fileName << std::endl;
+         return false;
+     }
+ }
+
 
 
 
@@ -34,10 +60,15 @@
      std::string const & expectedPlantUMLCode,
      std::string const & expectedBase64)
  {
+  GWFTranslator translator(context);
+
+  std::string scsCode=translator.TranslateXMLFileContentToSCs(USE_CASE_DIAGRAM_MODULE_TEST_FILES_DIR_PATH+"some_name.gwf");
+  saveStringToFile(USE_CASE_DIAGRAM_MODULE_TEST_FILES_DIR_PATH+"example.scs", scsCode);
+
+
+
    loader.loadScsFile(context, USE_CASE_DIAGRAM_MODULE_TEST_FILES_DIR_PATH + fileWithGraphName);
-   loader.loadScsFile(context, USE_CASE_DIAGRAM_MODULE_TEST_FILES_DIR_PATH + "templates.scs");
-   loader.loadScsFile(context, USE_CASE_DIAGRAM_MODULE_TEST_FILES_DIR_PATH + "testAction.scs");
-   loader.loadScsFile(context, USE_CASE_DIAGRAM_MODULE_TEST_FILES_DIR_PATH + "checkTemplates.scs");
+
  
    ScAddr testActionNode = context.SearchElementBySystemIdentifier("test_action");
    ASSERT_TRUE(testActionNode.IsValid());
@@ -47,7 +78,7 @@
  
    ScStructure const & result = testAction.GetResult();
   //TODO: from this point
-
+  
 
 
 

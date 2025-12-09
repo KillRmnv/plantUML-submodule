@@ -18,7 +18,6 @@ public:
 
     virtual ~BaseDiagramBuilder();
 
-    // --- ядро логики диаграммы ---
     virtual void ProcessNode(ScAddr node, ScAddr container) = 0;
     virtual void ProcessEdgesByNode(ScAddr node, ScAddr container) = 0;
     virtual void ProcessAdjacentNodes(ScAddr node, ScAddr container) = 0;

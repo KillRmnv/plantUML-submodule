@@ -20,6 +20,7 @@ LINK_PUBLIC sc-machine::sc-memory
 LINK_PUBLIC sc-machine::sc-agents-common
 LINK_PUBLIC scl-machine::inference
 LINK_PUBLIC ps-common-lib::common-utils
+LINK_PUBLIC sc-builder-local
     LINK_PUBLIC plantuml-common
     LINK_PUBLIC plantuml-utils
 )

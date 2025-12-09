@@ -4,8 +4,8 @@
 #include <string>
 #include <utility> 
 
- #include "common/PackageDiagramBuilder.hpp"
- #include "common/DiagramBuilder.hpp"
+ #include "../../common/PackageDiagramBuilder.hpp"
+ #include "../../common/DiagramBuilder.hpp"
 #include <vector>
 using namespace std;
 class StateDiagramBuilder : public PackageDiagramBuilder
@@ -27,14 +27,15 @@ private:
     std::vector<ScAddrVector> FindSequence(std::vector<std::pair<ScAddr, int>>  entry,ScAddr package,ScAddr Node);
     std::vector<std::vector<int>> FormEqualPrioritiesSequences(std::vector<ScAddrVector> sequences,std::vector<std::pair<ScAddr, int>> entries);
     std::vector<ScAddrVector> Combinations(std::vector<ScAddrVector> sequences);
-    std::string AddEntitiesAndTransitions(ScAddrVector comb,ScAddr Node,std::string condition);
+    std::string AddEntitiesAndTransitions(ScAddrVector comb,ScAddr Node,std::string condition,int num);
     std::string CreateEdgeBetweenActions(std::unordered_map<int, std::vector<std::string>> combByInt,ScAddrVector NextAction,ScAddr BaseAction);
     void ProcessEdge(ScAddr edge,ScAddr package);
     std::pair<std::string,std::string> ProcessCondition(ScAddr Condition,ScAddr Node);
     bool PackageCheck(ScAddr package,ScAddr parent) override;
     std::string Termination();
+    std::string AddTransitions(ScAddr Node,std::string end,std::string cond);
     int conditionCounter=0;
-    ScAddrToValueUnorderedMap<std::string> nodes;
+    ScAddrToValueUnorderedMap<std::vector<std::string>> nodes;
     ScAddrToValueUnorderedMap<std::pair<std::string,std::string>> conditionMap;
     std::shared_ptr<ScAddrSet> packages;
     ScAddrSet processedEntries;

@@ -1,4 +1,5 @@
 #include <memory>
+#include <sc-builder/scs_loader.hpp>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -8,6 +9,7 @@
 #include <sc-memory/sc_debug.hpp>
 #include <sc-memory/sc_iterator.hpp>
 #include <sc-memory/sc_keynodes.hpp>
+#include <sc-memory/sc_stream.hpp>
 #include <sc-memory/sc_type.hpp>
 #include "keynodes/Keynodes.hpp"
 
@@ -19,18 +21,20 @@ StateDiagramBuilder::StateDiagramBuilder(ScMemoryContext * context, utils::ScLog
     priorities[Keynodes::nrel_else]=2;
     priorities[Keynodes::nrel_goto]=1;
     packages=std::make_shared<ScAddrSet>();
-
-
+    
 }
-//TODO:refactor
-std::string StateDiagramBuilder::AddEntitiesAndTransitions(ScAddrVector comb,ScAddr Node,std::string condition)
+
+//TODO:refactor and delete regular states from package
+std::string StateDiagramBuilder::AddEntitiesAndTransitions(ScAddrVector comb,ScAddr Node,std::string condition,int num)
 {
     std::string combStr;
     auto pair=context->GetConnectorIncidentElements(comb[0]);
     m_logger->Debug("comb size:"+to_string(comb.size()));
-    combStr+="state "+nodes[get<1>(pair)]+"{\n}\n";
-        m_logger->Debug("map:"+conditionMap[comb[0]].first+" nodes:"+nodes[get<1>(pair)]);
-        if(conditionMap[comb[0]].first==nodes[get<1>(pair)]){
+    std::string nodeInPosssiblePath=nodes[get<1>(pair)].front()+"_pp"+to_string(num);
+    nodes[get<1>(pair)].push_back(nodeInPosssiblePath);
+    combStr+="state "+nodeInPosssiblePath+"{\n}\n";
+        m_logger->Debug("map:"+conditionMap[comb[0]].first+" nodes:"+nodeInPosssiblePath);
+        if(conditionMap[comb[0]].first==nodes[get<1>(pair)].front()){
             combStr+="state choice"+to_string(conditionCounter)+" <<choice>>\n";
             std::string addition=condition+" --> "+"choice"+to_string(conditionCounter);
             if(!conditionMap[comb[0]].second.empty())
@@ -38,30 +42,34 @@ std::string StateDiagramBuilder::AddEntitiesAndTransitions(ScAddrVector comb,ScA
             else
                 addition+="\n";
             condition="choice"+to_string(conditionCounter);
-            combStr+=condition+" --> "+nodes[get<1>(pair)]+"\n";
+            combStr+=condition+" --> "+nodeInPosssiblePath+"\n";
             relations+=addition;
             conditionCounter++;
 
         }else{
-            combStr+="state "+conditionMap[comb[0]] .first+" <<choice>>\n";
-            std::string addition=condition+" --> "+conditionMap[comb[0]] .first;
+
+            combStr+="state choice"+to_string(conditionCounter)+" <<choice>>\n";
+            std::string addition=condition+" --> "+"choice"+to_string(conditionCounter);
             if(!conditionMap[comb[0]] .second.empty())
                         addition+=":"+conditionMap[comb[0]] .second+"\n";
             else
                 addition+="\n";
-            condition=conditionMap[comb[0]] .first;
-            combStr+=condition+" --> "+nodes[get<1>(pair)]+"\n";
+            condition="choice"+to_string(conditionCounter);
+            combStr+=condition+" --> "+nodeInPosssiblePath+"\n";
 
             relations+=addition;
+            conditionCounter++;
         }
     
     
     for(int i=1;i<comb.size();i++){
         pair=context->GetConnectorIncidentElements(comb[i]);
-        combStr+="state "+nodes[get<1>(pair)]+"{\n}\n";
-        m_logger->Debug("map:"+conditionMap[comb[i]] .first+" nodes:"+nodes[get<1>(pair)]);
+        nodeInPosssiblePath=nodes[get<1>(pair)].front()+"_pp"+to_string(num);
+        nodes[get<1>(pair)].push_back(nodeInPosssiblePath);
+        combStr+="state "+nodeInPosssiblePath+"{\n}\n";
+        m_logger->Debug("map:"+conditionMap[comb[i]] .first+" nodes:"+nodeInPosssiblePath);
 
-        if(conditionMap[comb[i]] .first==nodes[get<1>(pair)]){
+        if(conditionMap[comb[i]] .first==nodes[get<1>(pair)].front()){
             combStr+="state choice"+to_string(conditionCounter)+" <<choice>>\n";
             std::string addition=condition+" --> "+"choice"+to_string(conditionCounter);
             if(!conditionMap[comb[i]] .second.empty())
@@ -70,24 +78,23 @@ std::string StateDiagramBuilder::AddEntitiesAndTransitions(ScAddrVector comb,ScA
                 addition+="\n";
             condition="choice"+to_string(conditionCounter);
             combStr+=addition;
-            combStr+=condition+" --> "+nodes[get<1>(pair)]+"\n";
+            combStr+=condition+" --> "+nodeInPosssiblePath+"\n";
 
             conditionCounter++;
 
 
         }else{
-            combStr+="state "+conditionMap[comb[i]] .first+" <<choice>>\n";
+            combStr+="state choice"+to_string(conditionCounter)+" <<choice>>\n";
             std::string addition=condition+" --> "+conditionMap[comb[i]] .first;
             if(!conditionMap[comb[i]] .second.empty())
                         addition+=":"+conditionMap[comb[i]] .second+"\n";
             else
                 addition+="\n";
-            condition=conditionMap[comb[i]] .first;
+            condition="choice"+to_string(conditionCounter);;
             combStr+=addition;
-            combStr+=condition+" --> "+nodes[get<1>(pair)]+"\n";
-
+            combStr+=condition+" --> "+nodeInPosssiblePath+"\n";
+            conditionCounter++;
         }
- 
     }
 return combStr;
 }
@@ -121,7 +128,7 @@ std::pair<std::string,std::string> StateDiagramBuilder::ProcessCondition(ScAddr 
     std::string sysIdentifier=context->GetElementSystemIdentifier(Condition);
     std::pair<std::string,std::string> result;
     result.second="";
-    result.first=nodes[Node];
+    result.first=nodes[Node].front();
 
     if(!sysIdentifier.empty()){
         entitiesInCurrentPackage+="state choice"+to_string(conditionCounter)+" <<choice>>\n";
@@ -211,7 +218,8 @@ void StateDiagramBuilder::ProcessPackage(ScAddr package) {
     ScIterator3Ptr it3=context->CreateIterator3(package, ScType::ConstPermPosArc,ScType::NodeTuple);
     ScIterator5Ptr it5internal;
     while (it3->Next()) {
-        it5internal=context->CreateIterator5(ScType::Node, ScType::CommonArc, it3->Get(2),ScType::PosArc,Keynodes::nrel_decomposition_of_action);
+        it5internal=context->CreateIterator5(ScType::Node, ScType::CommonArc, it3->Get(2),
+        ScType::PosArc,Keynodes::nrel_decomposition_of_action);
         while (it5internal->Next()) {
 
             entities+="state "+context->GetElementSystemIdentifier(it5internal->Get(0))+"{\n"+
@@ -221,31 +229,30 @@ void StateDiagramBuilder::ProcessPackage(ScAddr package) {
         }
     }
 }
-
+// TODO:fix it
 std::vector<ScAddrVector> StateDiagramBuilder::FindSequence(
     std::vector<std::pair<ScAddr, int>> entries,
-    ScAddr package,ScAddr Node)
+    ScAddr package, ScAddr Node)
 {
     std::vector<ScAddrVector> result;
 
     std::unordered_map<ScAddr, ScAddrVector, ScAddrHashFunc> graph;
 
-    for(auto entry:entries){
-        std::tuple<ScAddr,ScAddr> p=context->GetConnectorIncidentElements(entry.first);
-        m_logger->Debug("node graph "+context->GetElementSystemIdentifier(get<0>(p)));
+    for(auto entry : entries){
+        std::tuple<ScAddr,ScAddr> p = context->GetConnectorIncidentElements(entry.first);
+        m_logger->Debug("node graph " + context->GetElementSystemIdentifier(std::get<0>(p)));
  
-                ScIterator5Ptr it5=context->CreateIterator5(entry.first, ScType::CommonArc,ScType::CommonArc, 
-                ScType::PosArc, Keynodes::nrel_basic_sequence);
-                while(it5->Next()){
-
-                    if(context->CheckConnector(package, it5->Get(2), ScType::PosArc)){
-                    graph[entry.first].push_back(it5->Get(2));
-                    }
-                    
-                }
+        ScIterator5Ptr it5 = context->CreateIterator5(entry.first, ScType::CommonArc, ScType::CommonArc, 
+        ScType::PosArc, Keynodes::nrel_basic_sequence);
+        
+        while(it5->Next()){
+            if(context->CheckConnector(package, it5->Get(2), ScType::PosArc)){
+                graph[entry.first].push_back(it5->Get(2));
+            }      
+        }
     }
     
-    m_logger->Debug("form graph");
+    m_logger->Debug("form graph finished");
 
     std::function<void(ScAddr, ScAddrVector&, std::unordered_set<ScAddr, ScAddrHashFunc>&)> dfs;
 
@@ -255,15 +262,15 @@ std::vector<ScAddrVector> StateDiagramBuilder::FindSequence(
         visited.insert(node);
         path.push_back(node);
 
-        if (!graph.count(node)) {
+        if (!graph.count(node) || graph[node].empty()) {
             result.push_back(path);
+            
             visited.erase(node);
             path.pop_back();
             return;
         }
-        m_logger->Debug("dfs for adjacent nodes:"+context->GetElementSystemIdentifier(node)+":");
+
         for (ScAddr next : graph[node]) {
-            m_logger->Debug(context->GetElementSystemIdentifier(next));
             if (!visited.count(next)) {
                 dfs(next, path, visited);
             }
@@ -273,30 +280,18 @@ std::vector<ScAddrVector> StateDiagramBuilder::FindSequence(
         path.pop_back();
     };
 
-    std::unordered_set<ScAddr, ScAddrHashFunc> successors;
-    for (const auto& pair : graph) {
-        for (const ScAddr& next : pair.second) {
-            successors.insert(next);
-        }
-    }
-
-    std::vector<ScAddr> true_start_nodes;
-    for (const auto& e : entries) {
-        if (successors.count(e.first) == 0) {
-            true_start_nodes.push_back(e.first);
-        }
-    }
-
-
-    for (ScAddr start_node : true_start_nodes) {
-        std::tuple<ScAddr,ScAddr> p=context->GetConnectorIncidentElements(start_node);
-        m_logger->Debug("dfs for true start node: "+context->GetElementSystemIdentifier(get<0>(p)));
+    for (const auto& entry : entries) {
+        ScAddr start_node = entry.first;
+        
+        // std::tuple<ScAddr,ScAddr> p = context->GetConnectorIncidentElements(start_node);
+        // m_logger->Debug("dfs start for: " + context->GetElementSystemIdentifier(std::get<0>(p)));
         
         ScAddrVector path;
         std::unordered_set<ScAddr, ScAddrHashFunc> visited;
 
         dfs(start_node, path, visited);
     }
+
     m_logger->Debug("dfs finished");
 
     return result;
@@ -306,8 +301,19 @@ void StateDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
     if(usedNodes->find(Node)==usedNodes->end() && 
     context->CheckConnector(ScKeynodes::action, Node, ScType::PermPosArc)&&
     nodes.find(Node)==nodes.end()){
-        nodes[Node]=context->GetElementSystemIdentifier(Node); 
+        if(context->GetElementSystemIdentifier(Node).empty()){
+            ScIterator5Ptr it5=context->CreateIterator5(ScType::NodeClass, ScType::PermPosArc, 
+                Node,ScType::PermPosArc, package);
+            while(it5->Next()){
+                if(it5->Get(0)!=ScKeynodes::action){
+                    nodes[it5->Get(0)].push_back(trim(context->GetElementSystemIdentifier(it5->Get(0)))); 
+                }
+            }
+        }else{
+            nodes[Node].push_back(context->GetElementSystemIdentifier(Node)); 
+        }
         usedNodes->insert(Node);
+
         ScIterator5Ptr it5=context->CreateIterator5(Node, ScType::CommonArc,ScType::NodeTuple,ScType::PosArc,
              Keynodes::nrel_decomposition_of_action);
         while(it5->Next()){
@@ -388,7 +394,6 @@ std::vector<std::vector<int>> StateDiagramBuilder::FormEqualPrioritiesSequences(
         groups[pr].push_back(i);
     }
 
-    // 3. Переносим группы в результат
     std::vector<std::vector<int>> result;
     result.reserve(groups.size());
 
@@ -402,14 +407,14 @@ void StateDiagramBuilder::ProcessEdge(ScAddr edge,ScAddr Node){
     m_logger->Debug("Process edge by node: "+context->GetElementSystemIdentifier(Node));
     std::pair<std::string,std::string> condition;
     condition.second="";
-    condition.first=nodes[Node];
+    condition.first=nodes[Node].front();
     conditionMap[edge]=condition;
         ScIterator3Ptr it3=context->
         CreateIterator3(edge, ScType::CommonArc, ScType::NodeStructure);
         if(it3->Next() ){
             condition=ProcessCondition(it3->Get(2),Node);            
-            if(condition.first!=nodes[Node]){
-                relations+=condition.first+ " --> "+nodes[Node] +" :satisfy "+condition.second+" ";
+            if(condition.first!=nodes[Node].front()){
+                relations+=condition.first+ " --> "+nodes[Node].front() +" :satisfy "+condition.second+" ";
                 conditionMap[edge]=condition;
             }
         }
@@ -445,7 +450,8 @@ void StateDiagramBuilder::ProcessEdgesByNode(ScAddr Node,ScAddr package)
 void StateDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
 {
     if(context->CheckConnector(ScKeynodes::action, Node,ScType::PermPosArc)){
-        ScIterator5Ptr it5=context->CreateIterator5(Node, ScType::CommonArc, ScType::NodeTuple,ScType::PosArc,Keynodes::nrel_decomposition_of_action);
+        ScIterator5Ptr it5=context->CreateIterator5(Node, ScType::CommonArc, 
+            ScType::NodeTuple,ScType::PosArc,Keynodes::nrel_decomposition_of_action);
         while(it5->Next()){
             if(context->CheckConnector(package, it5->Get(2), ScType::ConstPosArc)){
                 return;
@@ -461,7 +467,7 @@ void StateDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
 
                     m_logger->Debug("processing edges to node:"+context->GetElementSystemIdentifier(it5->Get(2)));
                     ProcessNode(it5->Get(2),package);
-                    m_logger->Debug("processed node:"+nodes[it5->Get(2)]);
+                    m_logger->Debug("processed node:"+nodes[it5->Get(2)].front());
                     ProcessEdgesByNode(it5->Get(2),  package);
             }
         }
@@ -494,7 +500,7 @@ void StateDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
         for (int sequence=0;sequence<equalSequences.size();sequence++){
             for(int i=0;i<equalSequences[sequence].size();i++){
                 m_logger->Debug("processing equal sequence "+to_string(sequence));
-                if(sequences[equalSequences[sequence][i]].size()>1){
+                if(sequences[equalSequences[sequence][i]].size()>1||i>0){
                     m_logger->Debug("Start processing large equal sequence:"+to_string(sequences[equalSequences[sequence][i]].size()));
                     std::vector<ScAddrVector> equalSequence;
                     int ind=equalSequences[sequence][i]-1;
@@ -503,42 +509,40 @@ void StateDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
                         entitiesInCurrentPackage+="state Path"+to_string(conditionCounter) +" <<choice>>\n";
                         condition="Path"+to_string(conditionCounter);
                         conditionCounter++;
-                        relations+=nodes[Node]+" --> "+condition+"\n";
+                        relations+=nodes[Node].front()+" --> "+condition+"\n";
                     }else{
                         entitiesInCurrentPackage+="state Path"+to_string(conditionCounter) +" <<choice>>\n";
                         relations+=condition+" --> "+"Path"+to_string(conditionCounter)+"\n";
-                        condition="Path"+to_string(conditionCounter);
-                        conditionCounter++;
+                        // condition="Path"+to_string(conditionCounter);
+                        // conditionCounter++;
                     }
                     
 
                     std::string combStr="state PossiblePath"+to_string(conditionCounter)+"{\n"+AddEntitiesAndTransitions( sequences[equalSequences[sequence][i]]
-                        ,Node,condition)+"\n}\n";
+                        ,Node,condition,conditionCounter)+"\n}\n";
                     conditionCounter++;
                     entitiesInCurrentPackage=combStr+entitiesInCurrentPackage;    
                     
-                    
-
-
                 }else{
 
                     m_logger->Debug("equalSequences[sequence][0]:"+to_string(equalSequences[sequence][0])+"\n"+
                     context->GetElementSystemIdentifier(sequences[equalSequences[sequence][i]][0]));
                     if(equalSequences[sequence][0]-1==-1 ){
                         std::string addition;
-                        if(!conditionMap[sequences[equalSequences[sequence][i]][0]].first.empty()){
-                             addition=nodes[Node]+" --> "+conditionMap[sequences[equalSequences[sequence][i]][0]].first;
-                             condition=conditionMap[sequences[equalSequences[sequence][i]][0]].first;
+                       
+                            if(!conditionMap[sequences[equalSequences[sequence][i]][0]].first.empty()){
+                                addition=AddTransitions(Node, conditionMap[sequences[equalSequences[sequence][i]][0]].first,
+                                    conditionMap[sequences[equalSequences[sequence][i]][0]].second);;
+                                // nodes[Node]+" --> "+conditionMap[sequences[equalSequences[sequence][i]][0]].first;
+                                condition=conditionMap[sequences[equalSequences[sequence][i]][0]].first;
                             }
-                        else{
-                            addition=nodes[Node]+" --> "+nodes[sequences[equalSequences[sequence][i]][0]];
-                            condition=nodes[sequences[equalSequences[sequence][i]][0]];
-                        }
-                            
-                        if(!conditionMap[sequences[equalSequences[sequence][i]][0]].second.empty())
-                            addition+=" :"+conditionMap[sequences[equalSequences[sequence][i]][0]].second+"\n";
-                        else
-                            addition+="\n";
+                            else{
+                                addition=AddTransitions(Node, nodes[sequences[equalSequences[sequence][i]][0]].front(),
+                                conditionMap[sequences[equalSequences[sequence][i]][0]].second);
+                                // nodes[Node]+" --> "+;
+                                condition=nodes[sequences[equalSequences[sequence][i]][0]].front();
+                            }
+                        
                         relations+=addition;
                     }else{
                         std::string addition;
@@ -546,8 +550,8 @@ void StateDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
                          addition= condition+" --> "+conditionMap[sequences[equalSequences[sequence][i]][0]].first;
                          condition=conditionMap[sequences[equalSequences[sequence][i]][0]].first;
                         }else{
-                            addition= condition+" --> "+nodes[sequences[equalSequences[sequence][i]][0]];
-                            condition=nodes[sequences[equalSequences[sequence][i]][0]];
+                            addition= condition+" --> "+nodes[sequences[equalSequences[sequence][i]][0]].front();
+                            condition=nodes[sequences[equalSequences[sequence][i]][0]].front();
                         }
                         if(!conditionMap[sequences[equalSequences[sequence][i]][0]].second.empty())
                             addition+=  " :"+conditionMap[sequences[equalSequences[sequence][i]][0]].second+"\n" ;
@@ -561,7 +565,18 @@ void StateDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
         m_logger->Debug("result for "+context->GetElementSystemIdentifier(Node)+":\n"+preamble+entities+entitiesInCurrentPackage+relations);
     }
 }
-
+std::string StateDiagramBuilder::AddTransitions(ScAddr Node,std::string end,std::string cond){
+    std::string result;
+    for(auto n:nodes[Node]){
+        result+=n+" --> "+end;
+        if(!cond.empty()){
+            result+=" :"+cond+"\n" ;
+        }else{
+            result+="\n";
+        }
+    }
+    return result;
+}
 ScAddrVector StateDiagramBuilder::CaptureTuple(ScAddr structure){
     ScAddr tuple;
     ScAddrVector tuples;
@@ -721,4 +736,5 @@ bool StateDiagramBuilder::PackageCheck(ScAddr package,ScAddr parent) {
             }
     }
     return false;
+    
 }

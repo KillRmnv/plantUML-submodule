@@ -29,7 +29,7 @@ set_target_properties(use-case-diagram-module PROPERTIES LIBRARY_OUTPUT_DIRECTOR
 if(${SC_CLANG_FORMAT_CODE})
     target_clangformat_setup(use-case-diagram-module)
 endif()
-
+add_subdirectory(test)
 if(${SC_BUILD_TESTS})
     add_subdirectory(test)
 endif()
