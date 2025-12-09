@@ -71,7 +71,7 @@ private:
   /// @param action The main action node
   /// @param package The container package
   /// @return Vector of entry point edge addresses
-  std::vector<ScAddr> FindEntryPoints(ScAddr action, ScAddr package);
+  std::vector<std::pair<ScAddr, int>>  FindEntryPoints(ScAddr action, ScAddr package);
 
   /// @brief Extracts tuple elements from a structure.
   /// @param structure The structure node containing tuple edges
@@ -84,17 +84,16 @@ private:
   /// @param Node The root action node
   /// @return Vector of sequences, each containing ordered action addresses
   std::vector<ScAddrVector> FindSequence(
-      std::vector<std::pair<ScAddr, ScAddr>> entries,
-      ScAddr package,
-      ScAddr Node);
+    std::vector<std::pair<ScAddr, int>> entries,
+    ScAddr package, ScAddr Node);
 
   /// @brief Groups equal-priority action sequences.
   /// @param sequences All detected action sequences
   /// @param entries Entry point edges with their sources
   /// @return Vector of priority-grouped sequence combinations
-  std::vector<std::vector<ScAddrVector>> FormEqualPrioritiesSequences(
-      std::vector<ScAddrVector> sequences,
-      std::vector<std::pair<ScAddr, ScAddr>> entries);
+  std::vector<std::vector<int>> FormEqualPrioritiesSequences(
+    std::vector<ScAddrVector> sequences,
+    std::vector<std::pair<ScAddr, int>> entries);
 
   /// @brief Generates all permutations of action sequences.
   /// @param sequences Input action sequences

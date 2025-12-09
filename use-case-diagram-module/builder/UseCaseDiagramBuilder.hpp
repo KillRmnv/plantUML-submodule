@@ -15,8 +15,8 @@
 #include <unordered_set>
 #include <tuple>
 
-#include "common/PackageDiagramBuilder.hpp"
-#include "common/DiagramBuilder.hpp"
+#include "../../common/PackageDiagramBuilder.hpp"
+#include "../../common/DiagramBuilder.hpp"
 
 using namespace std;
 
@@ -139,7 +139,7 @@ private:
 
   /// Maps use case structure addresses to their nesting levels.
   /// Tracks package depth for hierarchy validation.
-  ScAddrToValueUnorderedMap<std::set<int>> addrMap;
+  ScAddrToValueUnorderedMap<std::tuple<ScAddr, ScAddr, ScAddr>> addrMap;
 
   /// Current nesting level during recursive package processing.
   int level = 0;

@@ -7,7 +7,7 @@
 #include <sc-memory/sc_iterator.hpp>
 #include <sc-memory/sc_keynodes.hpp>
 #include <sc-memory/sc_type.hpp>
-#include "keynodes/Keynodes.hpp"
+#include "../keynodes/Keynodes.hpp"
 
 /// Delegates construction to the base PackageDiagramBuilder.
 UseCaseDiagramBuilder::UseCaseDiagramBuilder(ScMemoryContext * context, utils::ScLogger * logger)
