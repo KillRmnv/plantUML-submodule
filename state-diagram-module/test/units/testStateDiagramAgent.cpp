@@ -13,8 +13,8 @@
 //  #include "agents/StateDiagramAgent.hpp"
  #include "../../agents/StateDiagramAgent.hpp"
  #include "keynodes/Keynodes.hpp"
-#include <sc-builder/translator.hpp>
-#include <string>
+ #include <sc-builder/translator.hpp>
+ #include <string>
   
  namespace StateDiagramAgentTest
  {

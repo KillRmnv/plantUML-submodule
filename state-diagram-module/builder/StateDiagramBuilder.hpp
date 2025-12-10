@@ -138,9 +138,10 @@ private:
 
   /// @brief Determines and connects terminal states to [*] endpoint.
   /// @return PlantUML declarations for states without outgoing transitions
-  std::string Termination();
+  std::string Termination(ScAddr package);
   std::string AddTransitions(ScAddr Node,std::string end,std::string cond);
   std::string FormRelations();
+  std::string RemoveRedundantEntities(ScAddr package);
   // --- Member variables ---
 
   /// Counter for anonymous choice/decision states

@@ -36,6 +36,11 @@ std::string StateDiagramBuilder::AddEntitiesAndTransitions(ScAddrVector comb,ScA
     std::string nodeInPosssiblePath=nodes[get<1>(pair)].front()+"_pp"+to_string(num);
     nodes[get<1>(pair)].push_back(nodeInPosssiblePath);
     combStr+="state "+nodeInPosssiblePath+"{\n}\n";
+
+    std::string lineToReplace="state "+nodes[get<1>(pair)].front()+"{\n}\n";
+    size_t pos=entitiesInCurrentPackage.find(lineToReplace);
+    if(pos!=std::string::npos)
+    entitiesInCurrentPackage.replace(pos,lineToReplace.size(),"\n");
         m_logger->Debug("map:"+conditionMap[comb[0]].first+" nodes:"+nodeInPosssiblePath);
         if(conditionMap[comb[0]].first==nodes[get<1>(pair)].front()){
             combStr+="state choice"+to_string(conditionCounter)+" <<choice>>\n";
@@ -68,6 +73,10 @@ std::string StateDiagramBuilder::AddEntitiesAndTransitions(ScAddrVector comb,ScA
     for(int i=1;i<comb.size();i++){
         pair=context->GetConnectorIncidentElements(comb[i]);
         nodeInPosssiblePath=nodes[get<1>(pair)].front()+"_pp"+to_string(num);
+        lineToReplace="state "+nodes[get<1>(pair)].front()+"{\n}\n";
+        pos=entitiesInCurrentPackage.find(lineToReplace);
+        if(pos!=std::string::npos)
+        entitiesInCurrentPackage.replace(pos,lineToReplace.size(),"\n");
         nodes[get<1>(pair)].push_back(nodeInPosssiblePath);
         combStr+="state "+nodeInPosssiblePath+"{\n}\n";
         m_logger->Debug("map:"+conditionMap[comb[i]] .first+" nodes:"+nodeInPosssiblePath);
@@ -163,12 +172,22 @@ std::string trim_spaces(std::string str)
 /// @details Анализирует сгенерированный строковый буфер PlantUML (entities + relations),
 /// выявляет узлы, у которых есть входящие, но нет исходящих связей,
 /// и принудительно завершает их переходом в конечное состояние [*].
-std::string StateDiagramBuilder::Termination(){
+std::string StateDiagramBuilder::Termination(ScAddr package){
     std::unordered_map<std::string, int> outgoingCounts;
     std::unordered_set<std::string> entitiesWithIncoming;
     std::unordered_set<std::string> allEntities;
-    std::string result = "";
+     std::string result = "";
+     ScIterator3Ptr it3=context->CreateIterator3(package, ScType::PosArc,ScType::Node);
+     ScIterator5Ptr it5;
+     while(it3->Next()){
+        it5=context->CreateIterator5(it3->Get(2), ScType::CommonArc, ScType::Node, 
+        ScType::PosArc, package);
+        if(!it5->Next()){
+            if( nodes[it3->Get(2)].size()==1)
+                result += nodes[it3->Get(2)].front() + " --> [*]" + "\n";            
+        }
 
+     }
     std::stringstream ss(entitiesInCurrentPackage+relations+FormRelations());
     std::string line;
 
@@ -211,7 +230,7 @@ std::string StateDiagramBuilder::Termination(){
         
         // Если есть вход, но нет выхода -> конец потока управления
         if (has_incoming && has_no_outgoing&&(entitiesInCurrentPackage.find(entity)!=std::string::npos||
-        relations.find(entity)!=std::string::npos)) {
+        relations.find(entity)!=std::string::npos)&&result.find(entity + " --> [*]")==std::string::npos) {
             result += entity + " --> [*]" + "\n";
             continue; 
         }
@@ -222,7 +241,7 @@ std::string StateDiagramBuilder::Termination(){
         
         // Choice-узлы с одним выходом также считаем терминальными для данной ветки
         if (is_choice && has_one_outgoing&&(entitiesInCurrentPackage.find(entity)!=std::string::npos||
-        relations.find(entity)!=std::string::npos)) {
+        relations.find(entity)!=std::string::npos)&&result.find(entity + " --> [*]")==std::string::npos) {
             result += entity + " --> [*]" + "\n";
         }
     }
@@ -265,7 +284,17 @@ std::string StateDiagramBuilder::FormRelations(){
     }
     return result;
 }
+std::string StateDiagramBuilder::RemoveRedundantEntities(ScAddr package){
+    ScAddrSet entities;
+    ScIterator5Ptr it5=context->CreateIterator5(ScKeynodes::action, ScType::PosArc,ScType::Node,ScType::PosArc,package);
+    while(it5->Next()){
+       entities.insert(it5->Get(2));
+    }
+    for(auto e:entities){
+       
+    }
 
+}
 /// @details Итерируется по декомпозиции (nrel_decomposition_of_action) пакета,
 /// формирует state-блоки и вызывает финализацию (Termination) для текущего уровня вложенности.
 void StateDiagramBuilder::ProcessPackage(ScAddr package) {
@@ -277,7 +306,7 @@ void StateDiagramBuilder::ProcessPackage(ScAddr package) {
         while (it5internal->Next()) {
 
             entities+="state "+context->GetElementSystemIdentifier(it5internal->Get(0))+"{\n"+
-            entitiesInCurrentPackage+relations+Termination()+"}\n";
+            entitiesInCurrentPackage+relations+Termination(package)+"}\n";
             entitiesInCurrentPackage="";relations="";
             return;
         }
@@ -586,8 +615,8 @@ void StateDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
                         conditionCounter++;
                         relations+=nodes[Node].front()+" --> "+condition+"\n";
                     }else{
-                        entitiesInCurrentPackage+="state Path"+to_string(conditionCounter) +" <<choice>>\n";
-                        relations+=condition+" --> "+"Path"+to_string(conditionCounter)+"\n";
+                        // entitiesInCurrentPackage+="state Path"+to_string(conditionCounter) +" <<choice>>\n";
+                        // relations+=condition+" --> "+"Path"+to_string(conditionCounter)+"\n";
                         // condition="Path"+to_string(conditionCounter);
                         // conditionCounter++;
                     }
