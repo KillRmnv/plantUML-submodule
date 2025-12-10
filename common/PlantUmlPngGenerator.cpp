@@ -151,7 +151,7 @@ ScAddr PlantUmlPngGenerator::png_generator(
       raw_data,
       size,
       SC_STREAM_FLAG_READ | SC_STREAM_FLAG_SEEK | SC_STREAM_FLAG_TELL,
-      false  // владение буфером остаётся на вызывающей стороне
+      false  
   );
 
   // if (stream && stream->IsValid() && stream->HasFlag(SC_STREAM_FLAG_READ))
@@ -166,7 +166,7 @@ ScAddr PlantUmlPngGenerator::png_generator(
     ScAddr edge        = context->GenerateConnector(ScType::ConstCommonArc, link, format_png);
     ScAddr rel         = context->GenerateConnector(ScType::ConstPermPosArc, nrel_format, edge);
 
-    (void)rel; // rel используется только для семантической связи, подавляем предупреждение
+    (void)rel;
 
     m_logger->Debug("PNG успешно сохранён как Base64-link в SC-памяти");
     deleteTempFiles(pumlFile, pngFile);

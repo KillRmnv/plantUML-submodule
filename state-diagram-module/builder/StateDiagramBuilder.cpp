@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <memory>
 #include <sc-builder/scs_loader.hpp>
 #include <string>
@@ -168,7 +169,7 @@ std::string StateDiagramBuilder::Termination(){
     std::unordered_set<std::string> allEntities;
     std::string result = "";
 
-    std::stringstream ss(entitiesInCurrentPackage+relations);
+    std::stringstream ss(entitiesInCurrentPackage+relations+FormRelations());
     std::string line;
 
     // Парсинг текущего текста диаграммы для построения графа связности
@@ -209,7 +210,8 @@ std::string StateDiagramBuilder::Termination(){
         bool has_no_outgoing = (out_count == 0);
         
         // Если есть вход, но нет выхода -> конец потока управления
-        if (has_incoming && has_no_outgoing) {
+        if (has_incoming && has_no_outgoing&&(entitiesInCurrentPackage.find(entity)!=std::string::npos||
+        relations.find(entity)!=std::string::npos)) {
             result += entity + " --> [*]" + "\n";
             continue; 
         }
@@ -219,11 +221,48 @@ std::string StateDiagramBuilder::Termination(){
         bool has_one_outgoing = (out_count == 1);
         
         // Choice-узлы с одним выходом также считаем терминальными для данной ветки
-        if (is_choice && has_one_outgoing) {
+        if (is_choice && has_one_outgoing&&(entitiesInCurrentPackage.find(entity)!=std::string::npos||
+        relations.find(entity)!=std::string::npos)) {
             result += entity + " --> [*]" + "\n";
         }
     }
     
+    return result;
+}
+std::string StateDiagramBuilder::FormRelations(){
+    std::string result;
+    
+    for(auto p:relationsByAddr){
+        std::string firstEl=nodes[p.first].front();
+        size_t s=result.size();
+        for(auto node:nodes[p.first]){
+            if(node!=firstEl){
+                for(auto relation:p.second){
+                    std::string rel=relation;
+                size_t pos= rel.find(nodes[p.first].front());
+                if(pos==0){
+                rel.replace(pos,nodes[p.first].front().size(),node);
+
+                result+=rel;
+                }
+                }
+            }
+        }
+        if(result.size()==s){
+            for(auto relation:p.second){            
+                result+=relation;
+            }
+        }else{
+            for(auto relation:p.second){
+                std::string rel=relation;
+            size_t pos= rel.find(nodes[p.first].front());
+            if(pos!=0&& rel.find("choice")==0){
+
+                result+=rel;
+            }
+            }
+        }
+    }
     return result;
 }
 
@@ -244,7 +283,6 @@ void StateDiagramBuilder::ProcessPackage(ScAddr package) {
         }
     }
 }
-// TODO:fix it
 std::vector<ScAddrVector> StateDiagramBuilder::FindSequence(
     std::vector<std::pair<ScAddr, int>> entries,
     ScAddr package, ScAddr Node)
@@ -269,7 +307,6 @@ std::vector<ScAddrVector> StateDiagramBuilder::FindSequence(
     
     m_logger->Debug("form graph finished");
 
-    // Рекурсивная лямбда для обхода в глубину
     std::function<void(ScAddr, ScAddrVector&, std::unordered_set<ScAddr, ScAddrHashFunc>&)> dfs;
 
     dfs = [&](ScAddr node, ScAddrVector &path, 
@@ -353,7 +390,7 @@ void StateDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
     }
 }
 
-/// @details Находит точки входа (start nodes) в декомпозиции действия, 
+/// @details Находит точки входа (start nodes) в логике переходов действий, 
 /// учитывая роли (приоритеты) связей. Сортирует результат по приоритету.
 std::vector<std::pair<ScAddr, int>> StateDiagramBuilder::FindEntryPoints(ScAddr action,ScAddr package)
 {
@@ -436,11 +473,13 @@ void StateDiagramBuilder::ProcessEdge(ScAddr edge,ScAddr Node){
     conditionMap[edge]=condition;
         ScIterator3Ptr it3=context->
         CreateIterator3(edge, ScType::CommonArc, ScType::NodeStructure);
-        if(it3->Next() ){
+        if(it3->Next()){
             condition=ProcessCondition(it3->Get(2),Node);            
             if(condition.first!=nodes[Node].front()){
-                relations+=condition.first+ " --> "+nodes[Node].front() +" :satisfy "+condition.second+" ";
+                relationsByAddr[Node].push_back(condition.first+ " --> "+nodes[Node].front() +" :satisfy "+condition.second+" ");
+                // relations+=;
                 conditionMap[edge]=condition;
+                m_logger->Debug("Check condition:"+condition.first+ " --> "+nodes[Node].front() +" :satisfy "+condition.second+" ");
             }
         }
 }
@@ -467,7 +506,7 @@ void StateDiagramBuilder::ProcessEdgesByNode(ScAddr Node,ScAddr package)
                     m_logger->Debug("why?????");}else{
                 ProcessEdge(it5->Get(1),Node);
                 usedEdges->insert(it5->Get(1)); 
-                m_logger->Debug("conditionMap:"+conditionMap[it5->Get(1)].first);
+                m_logger->Debug("conditionMap:"+conditionMap[it5->Get(1)].first+ " value:"+conditionMap[it5->Get(1)].second);
                     }
                     
                 }     
@@ -560,28 +599,29 @@ void StateDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
                     entitiesInCurrentPackage=combStr+entitiesInCurrentPackage;    
                     
                 }else{
+                    std::string addition;
 
                     m_logger->Debug("equalSequences[sequence][0]:"+to_string(equalSequences[sequence][0])+"\n"+
                     context->GetElementSystemIdentifier(sequences[equalSequences[sequence][i]][0]));
                     if(equalSequences[sequence][0]-1==-1 ){
-                        std::string addition;
                        
                             if(!conditionMap[sequences[equalSequences[sequence][i]][0]].first.empty()){
-                                addition=AddTransitions(Node, conditionMap[sequences[equalSequences[sequence][i]][0]].first,
-                                    conditionMap[sequences[equalSequences[sequence][i]][0]].second);;
+                                addition=nodes[Node].front()+" --> "+conditionMap[sequences[equalSequences[sequence][i]][0]].first;
                                 // nodes[Node]+" --> "+conditionMap[sequences[equalSequences[sequence][i]][0]].first;
                                 condition=conditionMap[sequences[equalSequences[sequence][i]][0]].first;
                             }
                             else{
-                                addition=AddTransitions(Node, nodes[sequences[equalSequences[sequence][i]][0]].front(),
-                                conditionMap[sequences[equalSequences[sequence][i]][0]].second);
-                                // nodes[Node]+" --> "+;
+                                addition=nodes[Node].front()+" --> "+nodes[sequences[equalSequences[sequence][i]][0]].front();
+                                 
                                 condition=nodes[sequences[equalSequences[sequence][i]][0]].front();
                             }
+                            if(!conditionMap[sequences[equalSequences[sequence][i]][0]].second.empty())
+                                addition+=  " :"+conditionMap[sequences[equalSequences[sequence][i]][0]].second+"\n" ;
+                            else
+                                addition+="\n";
                         
-                        relations+=addition;
+                        // relations+=addition;
                     }else{
-                        std::string addition;
                         if(!conditionMap[sequences[equalSequences[sequence][i]][0]].first.empty()){
                          addition= condition+" --> "+conditionMap[sequences[equalSequences[sequence][i]][0]].first;
                          condition=conditionMap[sequences[equalSequences[sequence][i]][0]].first;
@@ -593,8 +633,11 @@ void StateDiagramBuilder::ProcessAdjacentNodes(ScAddr Node,ScAddr package)
                             addition+=  " :"+conditionMap[sequences[equalSequences[sequence][i]][0]].second+"\n" ;
                         else
                         addition+="\n";                
-                        relations+=addition;
+                        // relations+=addition;
                     }
+                    relationsByAddr[Node].push_back(addition);
+                    m_logger->Debug("Check relations:"+addition);
+
                 }
             }
         }
@@ -691,9 +734,6 @@ std::shared_ptr<ScAddrSet> StateDiagramBuilder::GetAllPackages(ScAddr diagram)
 
     }
     m_logger->Debug("start processing intersections(size):"+to_string(structures.size()));
-    // if(structures.size()==0){
-    //     packages.insert(diagram);
-    // }
     ScIterator5Ptr it5;
     //проверка вхождений действий из одного пакета в другой
     for( auto str:structures){
@@ -754,7 +794,7 @@ std::shared_ptr<ScAddrSet> StateDiagramBuilder::GetUsedNodes(ScAddr addr)
 }
 std::string StateDiagramBuilder::GetResultString()
 {
-    return "@startuml\n"+preamble+entities+entitiesInCurrentPackage+relations+"\n@enduml";
+    return "@startuml\n"+preamble+entities+entitiesInCurrentPackage+relations+FormRelations()+"\n@enduml";
 }
 
 /// @details Проверяет, содержит ли пакет вложенные структуры (через rrel_entry),

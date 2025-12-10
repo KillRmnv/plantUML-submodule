@@ -1,5 +1,5 @@
 #include "ErDiagramBuilder.hpp"
-#include <vector>
+#include <utility>
 #include <sc-memory/sc_addr.hpp>
 #include <sc-memory/sc_iterator.hpp>
 #include <sc-memory/sc_keynodes.hpp>
@@ -7,7 +7,6 @@
 #include "keynodes/Keynodes.hpp"
 #include <unordered_map>
 #include <string>
-#include <vector>
 
 ErDiagramBuilder::ErDiagramBuilder(ScMemoryContext * context, utils::ScLogger * logger)
     : BaseDiagramBuilder(context, logger)
@@ -34,13 +33,15 @@ ScAddrVector ErDiagramBuilder::GetClassMembers(ScAddr class_node)
     return items;
 }
 
-ScAddrVector ErDiagramBuilder::GetAttributes(ScAddr entity)
+ScAddrVector ErDiagramBuilder::GetAttributes(ScAddr entity,ScAddr package)
 {
     ScAddrVector attrs;
-    auto it = context->CreateIterator3( 
+    auto it = context->CreateIterator5( 
         entity,
         ScType::ConstPermPosArc,
-        ScType::ConstNode
+        ScType::ConstNode,
+        ScType::PosArc,
+        package
     );
     while (it->Next()) {
         ScAddr candidate = it->Get(2);
@@ -69,13 +70,15 @@ bool ErDiagramBuilder::IsRequired(ScAddr attr)
                                     ScType::ConstPermPosArc);
 }
 
-ScAddrVector ErDiagramBuilder::GetChildAttributes(ScAddr attr)
+ScAddrVector ErDiagramBuilder::GetChildAttributes(ScAddr attr,ScAddr package)
 {
     ScAddrVector child;
-    auto it = context->CreateIterator3( 
+    auto it = context->CreateIterator5( 
         attr,
         ScType::ConstPermPosArc,
-        ScType::ConstNode
+        ScType::ConstNode,
+        ScType::PosArc,
+        package
     );
     while (it->Next()) {
         ScAddr candidate = it->Get(2);
@@ -87,35 +90,53 @@ ScAddrVector ErDiagramBuilder::GetChildAttributes(ScAddr attr)
     return child;
 }
 
-std::string ErDiagramBuilder::ChenCardinality(ScAddr relNode)
+std::pair<std::string,std::string> ErDiagramBuilder::ChenCardinality(ScAddr classNode)
 {
-    bool isIdentifying = context->CheckConnector(
-        Keynodes::nrel_identifying_relationship, 
-        relNode,
-        ScType::ConstPermPosArc
-    );
+    std::string symbol="-";
+    //TODO:add check connector on strong relation change from - to =
+    std::pair<std::string,std::string> card = std::make_pair("---","---");
+
+    if(Keynodes::concept_one_or_many==classNode){
     
-    std::string card = "---";
 
-    if (context->CheckConnector(Keynodes::concept_one_to_one, relNode, ScType::ConstPermPosArc))
-        card = "-1-";
-    else if (context->CheckConnector(Keynodes::concept_one_to_many, relNode, ScType::ConstPermPosArc) ||
-             context->CheckConnector(Keynodes::concept_many_to_one, relNode, ScType::ConstPermPosArc))
-        card = "-N-"; 
-    else if (context->CheckConnector(Keynodes::concept_many_to_many, relNode, ScType::ConstPermPosArc))
-        card = "-N-";
 
-    if (isIdentifying) {
-        if (card == "-1-") return "=1=";
-        if (card == "-N-") return "=N=";
+        if(context->CheckConnector(Keynodes::concept_first_domain, classNode, ScType::PosArc)){
+            card = make_pair(symbol+"(1,N)"+symbol, "");
+        }else{
+            card = make_pair("",symbol+"(1,N)"+symbol);
+        }
     }
-
-    if (card == "---") return "---";
+    else if(Keynodes::concept_zero_or_one==classNode){
+        if(context->CheckConnector(Keynodes::concept_first_domain, classNode, ScType::PosArc)){
+            card = make_pair(symbol+"(0,1)"+symbol, "");
+        }else{
+            card = make_pair("",symbol+"(0,1)"+symbol);
+        }
+    }
+    else if(Keynodes::concept_zero_or_many==classNode){
+        if(context->CheckConnector(Keynodes::concept_first_domain, classNode, ScType::PosArc)){
+            card = make_pair(symbol+"(0,N)"+symbol, "");
+        }else{
+            card = make_pair("",symbol+"(0,N)"+symbol);
+        }
+    }else if(Keynodes::concept_one==classNode){
+        if(context->CheckConnector(Keynodes::concept_first_domain, classNode, ScType::PosArc)){
+            card = make_pair(symbol+"1"+symbol, "");
+        }else{
+            card = make_pair("",symbol+"1"+symbol);
+        }
+    }else if(Keynodes::concept_many==classNode){
+        if(context->CheckConnector(Keynodes::concept_first_domain, classNode, ScType::PosArc)){
+            card = make_pair(symbol+"N"+symbol, "");
+        }else{
+            card = make_pair("",symbol+"N"+symbol);
+        }
+    }
 
     return card;
 }
 
-std::string ErDiagramBuilder::MakeEntityBlock(ScAddr entity)
+std::string ErDiagramBuilder::MakeEntityBlock(ScAddr entity,ScAddr package)
 {
     std::string name = context->GetElementSystemIdentifier(entity); 
 
@@ -130,8 +151,8 @@ std::string ErDiagramBuilder::MakeEntityBlock(ScAddr entity)
     if (isWeak)
         block += " <<weak>>";
     block += " {\n";
-
-    for (ScAddr attr : GetAttributes(entity)) {
+    //TODO: make recursion of this cycle
+    for (ScAddr attr : GetAttributes(entity,package)) {
         std::string attr_name = context->GetElementSystemIdentifier(attr); 
 
         if (context->CheckConnector(Keynodes::concept_key_attribute, 
@@ -140,9 +161,9 @@ std::string ErDiagramBuilder::MakeEntityBlock(ScAddr entity)
             attr_name += " <<key>>";
 
         if (IsOptional(attr))
-            attr_name += "?";
+            attr_name += "<<derived>>";
 
-        auto children = GetChildAttributes(attr);
+        auto children = GetChildAttributes(attr,package);
         if (!children.empty()) {
             block += "  " + attr_name + " {\n";
             for (ScAddr child : children) {
@@ -154,7 +175,7 @@ std::string ErDiagramBuilder::MakeEntityBlock(ScAddr entity)
                     child_name += " <<key>>";
 
                 if (IsOptional(child))
-                    child_name += "?";
+                    child_name += "<<derived>>";
 
                 block += "    " + child_name + "\n";
             }
@@ -168,7 +189,7 @@ std::string ErDiagramBuilder::MakeEntityBlock(ScAddr entity)
     return block;
 }
 
-std::string ErDiagramBuilder::MakeRelationshipBlock(ScAddr relNode)
+std::string ErDiagramBuilder::MakeRelationshipBlock(ScAddr relNode,ScAddr package)
 {
     std::string name = context->GetElementSystemIdentifier(relNode);
     if (name.empty()) return "";
@@ -184,9 +205,16 @@ std::string ErDiagramBuilder::MakeRelationshipBlock(ScAddr relNode)
     block += " {\n";
 
     
-    for (ScAddr attr : GetAttributes(relNode)) {
+    for (ScAddr attr : GetAttributes(relNode,package)) {
         std::string attr_name = context->GetElementSystemIdentifier(attr);
-        
+        if (context->CheckConnector(Keynodes::concept_key_attribute, 
+            attr,
+            ScType::ConstPermPosArc))
+            attr_name += " <<key>>";
+
+        if (IsOptional(attr))
+            attr_name += "<<derived>>";
+
         block += "  " + attr_name + "\n";
     }
     block += "}\n\n";
@@ -195,6 +223,7 @@ std::string ErDiagramBuilder::MakeRelationshipBlock(ScAddr relNode)
 
 void ErDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
 {
+    if(context->CheckConnector(package, Node, ScType::PosArc)){
     std::string nodeName = context->GetElementSystemIdentifier(Node);
     m_logger->Debug("ProcessNode: Inspecting node " + nodeName);
 
@@ -203,69 +232,71 @@ void ErDiagramBuilder::ProcessNode(ScAddr Node,ScAddr package)
         if (usedNodes->find(Node) == usedNodes->end())
         {
             
-            entities_ += MakeEntityBlock(Node);
+            entities_ += MakeEntityBlock(Node,package);
             usedNodes->insert(Node);
         }
     }
+}
 }
 
 
 void ErDiagramBuilder::ProcessAdjacentNodes(ScAddr Node, ScAddr package)
 {
-    std::string startNodeName = context->GetElementSystemIdentifier(Node);
-    m_logger->Debug("ProcessAdjacentNodes: Starting search from " + startNodeName);
+    if(context->CheckConnector(package, Node, ScType::PosArc)){
+    
+        std::string startNodeName = context->GetElementSystemIdentifier(Node);
+        m_logger->Debug("ProcessAdjacentNodes: Starting search from " + startNodeName);
 
-    ScIterator5Ptr it5 = context->CreateIterator5(
-        Node,
-        ScType::ConstCommonArc,
-        ScType::ConstNode,
-        ScType::ConstPosArc,
-        ScType::ConstNodeNonRole
-    );
+        ScIterator5Ptr it5 = context->CreateIterator5(
+            Node,
+            ScType::ConstCommonArc,
+            ScType::ConstNode,
+            ScType::ConstPosArc,
+            ScType::ConstNodeNonRole
+        );
 
-    while (it5->Next()) {
-        ScAddr entity2 = it5->Get(2);
-        ScAddr relNode = it5->Get(4);
-        
-        if (!context->CheckConnector(Keynodes::concept_entity, entity2, ScType::ConstPermPosArc))
-            continue;
-        
-        std::string e1_name = context->GetElementSystemIdentifier(Node);
-        std::string e2_name = context->GetElementSystemIdentifier(entity2);
-        std::string rel_name = context->GetElementSystemIdentifier(relNode);
-
-        m_logger->Debug("ProcessAdjacentNodes: Found Arc. Relation: " + rel_name + " -> Target: " + e2_name);
-
-        if (e1_name.empty() || e2_name.empty() || rel_name.empty())
-            m_logger->Debug("ProcessAdjacentNodes: One of identifiers is empty. Skipping.");
-            continue;
+        while (it5->Next()) {
+            ScAddr entity2 = it5->Get(2);
+            ScAddr relNode = it5->Get(4);
             
-        if (usedRelationships.find(relNode) == usedRelationships.end()) {
-            m_logger->Debug("ProcessAdjacentNodes: New Relationship found: " + rel_name + ". Making block.");
-            relationships_ += MakeRelationshipBlock(relNode);
-            usedRelationships.insert(relNode);
-        }
+            if (!context->CheckConnector(Keynodes::concept_entity, entity2, ScType::ConstPermPosArc))
+                continue;
+            
+            std::string e1_name = context->GetElementSystemIdentifier(Node);
+            std::string e2_name = context->GetElementSystemIdentifier(entity2);
+            std::string rel_name = context->GetElementSystemIdentifier(relNode);
 
-        std::string card = ChenCardinality(relNode); 
-        
-        std::string line1 = rel_name + " " + card + " " + e1_name + "\n";
-        
-        std::string line2 = rel_name + " " + card + " " + e2_name + "\n";
+            m_logger->Debug("ProcessAdjacentNodes: Found Arc. Relation: " + rel_name + " -> Target: " + e2_name);
 
+            if (e1_name.empty() || e2_name.empty() || rel_name.empty()){
+                m_logger->Debug("ProcessAdjacentNodes: One of identifiers is empty. Skipping.");
+                continue;
+            }
+                
         
-        if (e1_name < e2_name) {
-            m_logger->Debug("ProcessAdjacentNodes: Adding lines for " + rel_name);
-            relations_ += line1;
-            relations_ += line2;
-        } else if (e1_name == e2_name) {
-            m_logger->Debug("ProcessAdjacentNodes: Adding recursive lines for " + rel_name);
-            relations_ += line1; 
+                m_logger->Debug("ProcessAdjacentNodes: New Relationship found: " + rel_name + ". Making block.");
+            if(usedRelationships.find(relNode)==usedRelationships.end()){
+                    relationships_ += MakeRelationshipBlock(relNode,package);
+                    usedRelationships.insert(relNode);
+            }
+            ScIterator5Ptr it5=context->CreateIterator5(ScType::ConstNodeClass, ScType::PosArc, relNode, ScType::PosArc, package);
+            while (it5->Next()) {
+                std::pair<std::string,std::string> card = ChenCardinality(it5->Get(0));
+            if(!card.first.empty()&&entityToRelation.find(Node)==entityToRelation.end()){
+                entityToRelation[Node]=relNode;
+                relations_+= e1_name + " " + card.first + " " + rel_name + "\n";
+            }
+            if(!card.second.empty())
+            relations_+= rel_name + " " + card.second + " " + e2_name + "\n";
+            }
+            
+            
+
         }
     }
 }
 
 
-// --- ФИНАЛЬНАЯ СБОРКА РЕЗУЛЬТАТА ---
 std::string ErDiagramBuilder::GetResultString()
 {
     m_logger->Debug("GetResultString: Assembling result.");

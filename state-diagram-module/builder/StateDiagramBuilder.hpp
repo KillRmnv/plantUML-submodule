@@ -7,6 +7,7 @@
 #ifndef E880379C_8752_4327_BDEC_4CFBE899C1DB
 #define E880379C_8752_4327_BDEC_4CFBE899C1DB
 
+#include <string>
 #pragma once
 
 #include <sc-memory/sc_addr.hpp>
@@ -139,7 +140,7 @@ private:
   /// @return PlantUML declarations for states without outgoing transitions
   std::string Termination();
   std::string AddTransitions(ScAddr Node,std::string end,std::string cond);
-
+  std::string FormRelations();
   // --- Member variables ---
 
   /// Counter for anonymous choice/decision states
@@ -172,7 +173,7 @@ private:
   /// Maps transition relation keynodes to their priority levels
   /// Priority order: nrel_priority_path (4) > nrel_then (3) > nrel_else (2) > nrel_goto (1)
   ScAddrToValueUnorderedMap<int> priorities;
-   
+  ScAddrToValueUnorderedMap<std::vector<std::string>> relationsByAddr;
 
 };
 
