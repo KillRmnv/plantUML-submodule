@@ -90,43 +90,45 @@ ScAddrVector ErDiagramBuilder::GetChildAttributes(ScAddr attr,ScAddr package)
     return child;
 }
 
-std::pair<std::string,std::string> ErDiagramBuilder::ChenCardinality(ScAddr classNode)
+std::pair<std::string,std::string> ErDiagramBuilder::ChenCardinality(ScAddr classNode,bool hasFirst)
 {
     std::string symbol="-";
     //TODO:add check connector on strong relation change from - to =
     std::pair<std::string,std::string> card = std::make_pair("---","---");
 
     if(Keynodes::concept_one_or_many==classNode){
-    
 
-
-        if(context->CheckConnector(Keynodes::concept_first_domain, classNode, ScType::PosArc)){
+        if(!hasFirst&&context->CheckConnector(Keynodes::concept_first_domain, classNode, ScType::PosArc)){
             card = make_pair(symbol+"(1,N)"+symbol, "");
-        }else{
+        }else {
             card = make_pair("",symbol+"(1,N)"+symbol);
         }
     }
     else if(Keynodes::concept_zero_or_one==classNode){
-        if(context->CheckConnector(Keynodes::concept_first_domain, classNode, ScType::PosArc)){
+
+        if(!hasFirst&&context->CheckConnector(Keynodes::concept_first_domain, classNode, ScType::PosArc)){
             card = make_pair(symbol+"(0,1)"+symbol, "");
         }else{
             card = make_pair("",symbol+"(0,1)"+symbol);
         }
     }
     else if(Keynodes::concept_zero_or_many==classNode){
-        if(context->CheckConnector(Keynodes::concept_first_domain, classNode, ScType::PosArc)){
+
+        if(!hasFirst&&context->CheckConnector(Keynodes::concept_first_domain, classNode, ScType::PosArc)){
             card = make_pair(symbol+"(0,N)"+symbol, "");
         }else{
             card = make_pair("",symbol+"(0,N)"+symbol);
         }
     }else if(Keynodes::concept_one==classNode){
-        if(context->CheckConnector(Keynodes::concept_first_domain, classNode, ScType::PosArc)){
+
+        if(!hasFirst&&context->CheckConnector(Keynodes::concept_first_domain, classNode, ScType::PosArc)){
             card = make_pair(symbol+"1"+symbol, "");
         }else{
             card = make_pair("",symbol+"1"+symbol);
         }
     }else if(Keynodes::concept_many==classNode){
-        if(context->CheckConnector(Keynodes::concept_first_domain, classNode, ScType::PosArc)){
+
+        if(!hasFirst&&context->CheckConnector(Keynodes::concept_first_domain, classNode, ScType::PosArc)){
             card = make_pair(symbol+"N"+symbol, "");
         }else{
             card = make_pair("",symbol+"N"+symbol);
@@ -279,15 +281,17 @@ void ErDiagramBuilder::ProcessAdjacentNodes(ScAddr Node, ScAddr package)
                     relationships_ += MakeRelationshipBlock(relNode,package);
                     usedRelationships.insert(relNode);
             }
+
             ScIterator5Ptr it5=context->CreateIterator5(ScType::ConstNodeClass, ScType::PosArc, relNode, ScType::PosArc, package);
             while (it5->Next()) {
-                std::pair<std::string,std::string> card = ChenCardinality(it5->Get(0));
-            if(!card.first.empty()&&entityToRelation.find(Node)==entityToRelation.end()){
-                entityToRelation[Node]=relNode;
-                relations_+= e1_name + " " + card.first + " " + rel_name + "\n";
-            }
-            if(!card.second.empty())
-            relations_+= rel_name + " " + card.second + " " + e2_name + "\n";
+                m_logger->Debug("rel node:"+context->GetElementSystemIdentifier(relNode));
+                std::pair<std::string,std::string> card = ChenCardinality(it5->Get(0),entityToRelation.find(Node)!=entityToRelation.end());
+                if(!card.first.empty()&&entityToRelation.find(Node)==entityToRelation.end()){
+                    entityToRelation[Node]=relNode;
+                    relations_+= e1_name + " " + card.first + " " + rel_name + "\n";
+                }
+                if(!card.second.empty()&&relations_.find(rel_name + " " + card.second + " " + e2_name + "\n")==std::string::npos)
+                    relations_+= rel_name + " " + card.second + " " + e2_name + "\n";
             }
             
             

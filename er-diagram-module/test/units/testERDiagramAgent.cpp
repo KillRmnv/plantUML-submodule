@@ -14,20 +14,20 @@
  #include "../../../utils/sc-builder-local/src/gwf_translator.hpp"
  #include "../../../utils/sc-builder-local/src/scs_translator.hpp"
 
-//  #include "agents/StateDiagramAgent.hpp"
- #include "../../agents/StateDiagramAgent.hpp"
+//  #include "agents/ErDiagramAgent.hpp"
+ #include "../../agents/ErDiagramAgent.hpp"
  #include "keynodes/Keynodes.hpp"
  #include <sc-builder/translator.hpp>
  #include <string>
   
- namespace StateDiagramAgentTest
+ namespace ErDiagramAgentTest
  {
  ScsLoader loader;
- std::string const STATE_DIAGRAM_MODULE_TEST_FILES_DIR_PATH = "../test-structures/";
+ std::string const Er_DIAGRAM_MODULE_TEST_FILES_DIR_PATH = "../test-structures/";
  int const WAIT_TIME = 5000;
- std::string const STATE_DIAGRAM_MODULE_RESULT_FILES_DIR_PATH = "../results/";
+ std::string const Er_DIAGRAM_MODULE_RESULT_FILES_DIR_PATH = "../results/";
 
- using StateDiagramAgentTest = ScMemoryTest;
+ using ErDiagramAgentTest = ScMemoryTest;
  
  #include <fstream>
  #include <string>
@@ -76,19 +76,19 @@
  }
 
 
- void successfulStateDiagramAgentTest(
+ void successfulErDiagramAgentTest(
      ScAgentContext & context,
      std::string const & fileWithGraphName,
      std::string const & expectedPathTemplateIdtf,
      unsigned expectedPathLength)
  {
   GWFTranslator translator(context);
-   std::string scsCode=translator.TranslateXMLFileContentToSCs(STATE_DIAGRAM_MODULE_TEST_FILES_DIR_PATH+fileWithGraphName+".gwf");
-  saveStringToFile(STATE_DIAGRAM_MODULE_TEST_FILES_DIR_PATH+fileWithGraphName+".scs", scsCode);
+   std::string scsCode=translator.TranslateXMLFileContentToSCs(Er_DIAGRAM_MODULE_TEST_FILES_DIR_PATH+fileWithGraphName+".gwf");
+  saveStringToFile(Er_DIAGRAM_MODULE_TEST_FILES_DIR_PATH+fileWithGraphName+".scs", scsCode);
 
 
-   loader.loadScsFile(context, STATE_DIAGRAM_MODULE_TEST_FILES_DIR_PATH + fileWithGraphName+".scs");
-   loader.loadScsFile(context, STATE_DIAGRAM_MODULE_TEST_FILES_DIR_PATH + "testAction.scs");
+   loader.loadScsFile(context, Er_DIAGRAM_MODULE_TEST_FILES_DIR_PATH + fileWithGraphName+".scs");
+   loader.loadScsFile(context, Er_DIAGRAM_MODULE_TEST_FILES_DIR_PATH + "testAction.scs");
 
  
    ScAddr testActionNode = context.SearchElementBySystemIdentifier("test_action");
@@ -107,44 +107,44 @@
       ASSERT_TRUE(it3->Get(2).IsValid());
    }   
   for(int i=0;i<set.size();i++)
-   ASSERT_TRUE(set.find(readFile(STATE_DIAGRAM_MODULE_RESULT_FILES_DIR_PATH+fileWithGraphName+std::to_string(i)))!=set.end());
+   ASSERT_TRUE(set.find(readFile(Er_DIAGRAM_MODULE_RESULT_FILES_DIR_PATH+fileWithGraphName+std::to_string(i)))!=set.end());
   
  }
  
  void initialize(ScAgentContext & context)
  {
-   context.SubscribeAgent<StateDiagramAgent>();
+   context.SubscribeAgent<ErDiagramAgent>();
  }
  
  void shutdown(ScAgentContext & context)
  {
-   context.UnsubscribeAgent<StateDiagramAgent>();
+   context.UnsubscribeAgent<ErDiagramAgent>();
  }
  
- TEST_F(StateDiagramAgentTest, graphWithOnePackage)
+ TEST_F(ErDiagramAgentTest, graphWithOnePackage)
  {
    ScAgentContext & context = *m_ctx;
  
    initialize(context);
-   successfulStateDiagramAgentTest(context, "graphWithOnePackage.scs", "two_step_path_template", 450);
+   successfulErDiagramAgentTest(context, "graphWithOnePackage.scs", "two_step_path_template", 450);
    shutdown(context);
  }
  
- TEST_F(StateDiagramAgentTest, graphWithInternalPackages)
+ TEST_F(ErDiagramAgentTest, graphWithInternalPackages)
  {
    ScAgentContext & context = *m_ctx;
  
    initialize(context);
-   successfulStateDiagramAgentTest(context, "graphWithThreeStepsShortestPath.scs", "three_step_path_template", 250);
+   successfulErDiagramAgentTest(context, "graphWithThreeStepsShortestPath.scs", "three_step_path_template", 250);
    shutdown(context);
  }
- TEST_F(StateDiagramAgentTest, graphWithInternalPackagesAndNonAtomicArgument)
+ TEST_F(ErDiagramAgentTest, graphWithInternalPackagesAndNonAtomicArgument)
  {
    ScAgentContext & context = *m_ctx;
  
    initialize(context);
-   successfulStateDiagramAgentTest(context, "graphWithThreeStepsShortestPath.scs", "three_step_path_template", 250);
+   successfulErDiagramAgentTest(context, "graphWithThreeStepsShortestPath.scs", "three_step_path_template", 250);
    shutdown(context);
  }
- }  // namespace StateDiagramAgentTest
+ }  // namespace ErDiagramAgentTest
  

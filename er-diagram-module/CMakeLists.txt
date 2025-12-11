@@ -34,7 +34,7 @@ set_target_properties(er-diagram-module PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CM
 if(${SC_CLANG_FORMAT_CODE})
     target_clangformat_setup(er-diagram-module)
 endif()
-
+add_subdirectory(test)
 if(${SC_BUILD_TESTS})
     add_subdirectory(test)
 endif()

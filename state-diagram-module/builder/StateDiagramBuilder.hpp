@@ -174,7 +174,7 @@ private:
   /// Maps transition relation keynodes to their priority levels
   /// Priority order: nrel_priority_path (4) > nrel_then (3) > nrel_else (2) > nrel_goto (1)
   ScAddrToValueUnorderedMap<int> priorities;
-  ScAddrToValueUnorderedMap<std::vector<std::string>> relationsByAddr;
+  ScAddrToValueUnorderedMap<std::set<std::string>> relationsByAddr;
 
 };
 

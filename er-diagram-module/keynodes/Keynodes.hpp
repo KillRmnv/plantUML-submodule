@@ -25,6 +25,7 @@ public:
 
   static inline ScKeynode const nrel_identifying_relationship{"nrel_identifying_relationship", ScType::ConstNodeNonRole};
   static inline ScKeynode const concept_one_or_many{"concept_one_or_many", ScType::ConstNodeClass};
+  static inline ScKeynode const concept_second_domain{"concept_second_domain", ScType::ConstNodeClass};
 
   static inline ScKeynode const concept_first_domain{"concept_first_domain", ScType::ConstNodeClass};
   static inline ScKeynode const concept_zero_or_one{"concept_zero_or_one", ScType::ConstNodeClass};

@@ -128,20 +128,23 @@ void UseCaseDiagramBuilder::ProcessEdge(ScAddr edge,ScAddr relation,ScAddr packa
         }else if(relation==Keynodes::nrel_include_use_case){
             addition+=nameByStruct[get<0>(p)]+" ..> "+nameByStruct[get<1>(p)]+" : <<include>>\n";
         }else if(relation==Keynodes::nrel_generalization_use_case){
-
+            m_logger->Debug("generalization use case:");
             ScIterator3Ptr it3=context->CreateIterator3(ScType::ConstNodeClass, ScType::PosArc, get<0>(p));
+            bool check=false;
             while(it3->Next()){
                 ScIterator5Ptr it5=context->CreateIterator5(Keynodes::concept_actor, ScType::CommonArc, 
                     it3->Get(0),ScType::PosArc, package);
                     if(it5->Next()){
+                        check=true;
                             addition+=context->GetElementSystemIdentifier(get<0>(p))+" --|> "+
                             context->GetElementSystemIdentifier(get<1>(p))+"\n";
                             break;
-                        }else {
-                            addition+=nameByStruct[get<0>(p)]+" --|> "+nameByStruct[get<1>(p)]+"\n";
                         }
-        }
             
+        }
+           if(!check){
+            addition+=nameByStruct[get<0>(p)]+" --|> "+nameByStruct[get<1>(p)]+"\n";
+           } 
         }else if(get<0>(p)==Keynodes::concept_actor &&relation==ScKeynodes::nrel_inclusion) {
             ScIterator3Ptr it3=context->CreateIterator3(get<1>(p), ScType::PosArc, ScType::ConstNode);
             while(it3->Next())

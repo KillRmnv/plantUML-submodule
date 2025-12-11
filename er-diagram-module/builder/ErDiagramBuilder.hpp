@@ -26,7 +26,7 @@ private:
     bool IsRequired(ScAddr attr);
     std::vector<ScAddr> GetChildAttributes(ScAddr attr,ScAddr package);
 
-    std::pair<std::string,std::string> ChenCardinality(ScAddr classNode)  ;
+    std::pair<std::string,std::string> ChenCardinality(ScAddr classNode,bool hasFirst)  ;
       std::string MakeEntityBlock(ScAddr entity,ScAddr package);
     std::string MakeRelationshipBlock(ScAddr relNode,ScAddr package); 
    

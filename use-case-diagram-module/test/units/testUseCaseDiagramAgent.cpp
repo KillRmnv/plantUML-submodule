@@ -20,10 +20,25 @@
  ScsLoader loader;
  std::string const USE_CASE_DIAGRAM_MODULE_TEST_FILES_DIR_PATH = "../test-structures/";
  int const WAIT_TIME = 5000;
- 
+ std::string const USE_CASE_MODULE_RESULT_FILES_DIR_PATH = "../results/";
+
  using UseCaseDiagramAgentTest = ScMemoryTest;
  
 
+ std::string readFile(const std::string& path) {
+  std::ifstream file(path);
+
+  if (!file.is_open()) {
+      throw std::runtime_error("Cannot open file: " + path);
+  }
+
+  std::string content(
+      (std::istreambuf_iterator<char>(file)),
+      std::istreambuf_iterator<char>()
+  );
+
+  return content;
+}
  bool saveStringToFile(const std::string& fileName, const std::string& content)
  {
      std::ofstream outputFile(fileName);
@@ -67,7 +82,8 @@
 
 
 
-   loader.loadScsFile(context, USE_CASE_DIAGRAM_MODULE_TEST_FILES_DIR_PATH + fileWithGraphName);
+   loader.loadScsFile(context, USE_CASE_DIAGRAM_MODULE_TEST_FILES_DIR_PATH + fileWithGraphName+".scs");
+   loader.loadScsFile(context, USE_CASE_DIAGRAM_MODULE_TEST_FILES_DIR_PATH + "testAction.scs");
 
  
    ScAddr testActionNode = context.SearchElementBySystemIdentifier("test_action");
@@ -77,16 +93,17 @@
    ASSERT_TRUE(testAction.IsFinishedSuccessfully());
  
    ScStructure const & result = testAction.GetResult();
-  //TODO: from this point
-  
-
-
-
-
-
-
-
-
+  std::set<std::string> set;
+  ScIterator3Ptr it3=context.CreateIterator3(result, ScType::PosArc, ScType::ConstNodeLink);
+  while (it3->Next()) {
+   std::string code;
+     ASSERT_TRUE(context.GetLinkContent(it3->Get(2),code));
+     set.insert(code);
+     ASSERT_TRUE(it3->Get(2).IsValid());
+  }   
+ for(int i=0;i<set.size();i++)
+  ASSERT_TRUE(set.find(readFile(USE_CASE_MODULE_RESULT_FILES_DIR_PATH+fileWithGraphName+std::to_string(i)))!=set.end());
+ 
  }
  
  void initialize(ScAgentContext & context)
