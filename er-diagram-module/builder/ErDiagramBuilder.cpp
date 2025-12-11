@@ -58,7 +58,7 @@ ScAddrVector ErDiagramBuilder::GetAttributes(ScAddr entity,ScAddr package)
 
 bool ErDiagramBuilder::IsOptional(ScAddr attr)
 {
-    return context->CheckConnector(Keynodes::concept_optional_attribute, 
+    return context->CheckConnector(Keynodes::concept_multivalued_attribute, 
                                     attr,
                                     ScType::ConstPermPosArc);
 }
@@ -163,7 +163,7 @@ std::string ErDiagramBuilder::MakeEntityBlock(ScAddr entity,ScAddr package)
             attr_name += " <<key>>";
 
         if (IsOptional(attr))
-            attr_name += "<<derived>>";
+            attr_name += "<<multi>>";
 
         auto children = GetChildAttributes(attr,package);
         if (!children.empty()) {
@@ -177,7 +177,7 @@ std::string ErDiagramBuilder::MakeEntityBlock(ScAddr entity,ScAddr package)
                     child_name += " <<key>>";
 
                 if (IsOptional(child))
-                    child_name += "<<derived>>";
+                    child_name += "<<multi>>";
 
                 block += "    " + child_name + "\n";
             }
@@ -215,7 +215,7 @@ std::string ErDiagramBuilder::MakeRelationshipBlock(ScAddr relNode,ScAddr packag
             attr_name += " <<key>>";
 
         if (IsOptional(attr))
-            attr_name += "<<derived>>";
+            attr_name += "<<multi>>";
 
         block += "  " + attr_name + "\n";
     }

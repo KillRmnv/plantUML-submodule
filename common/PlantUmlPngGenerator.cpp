@@ -97,7 +97,7 @@ ScAddr PlantUmlPngGenerator::png_generator(
   // 2. Запуск внешнего PlantUML (java -jar ...) для генерации PNG.
   std::string pngFile = pumlFile.substr(0, pumlFile.size() - 5) + ".png";
   std::string cmd =
-      "java -jar problem-solver/cxx/plantUML-submodule/utils/plantuml.1.2023.7.jar -tpng " + pumlFile;
+      "java -jar problem-solver/cxx/plantUML-submodule/utils/plantuml.1.2025.4.jar -tpng " + pumlFile;
 
   m_logger->Debug("Выполняю команду: " + cmd);
 
