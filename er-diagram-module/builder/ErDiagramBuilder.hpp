@@ -65,6 +65,12 @@ private:
     /// @return True if attribute is required/key
     bool IsRequired(ScAddr attr);
 
+    /// @brief Checks if attribute is derived.
+    /// Returns true if attribute marked as concept_derived_attribute.
+    /// @param attr The attribute node to check
+    /// @return True if attribute is derived
+    bool IsDerived(ScAddr attr);
+
     /// @brief Checks if attribute is multivalued.
     /// Returns true if marked as concept_multivalued_attribute.
     /// @param attr The attribute node to check
@@ -127,5 +133,4 @@ private:
     ScAddrToValueUnorderedMap<ScAddr> entityToRelation;
 
 };
-
 

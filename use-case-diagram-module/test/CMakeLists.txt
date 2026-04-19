@@ -21,9 +21,8 @@ add_library(use-case-diagram-module-test STATIC ${TEST_UNITS_SOURCES})
 target_link_libraries(use-case-diagram-module-test
     LINK_PUBLIC use-case-diagram-module
     LINK_PUBLIC sc-builder-local
-    LINK_PUBLIC sc-memory
-    LINK_PUBLIC sc-config
-    LINK_PUBLIC sc-core
+    LINK_PUBLIC sc-machine::sc-core
+    LINK_PUBLIC sc-machine::sc-memory
     LINK_PUBLIC LibXml2::LibXml2
     LINK_PUBLIC GTest::gtest_main
 )

@@ -44,6 +44,13 @@ ScAddrVector ErDiagramBuilder::GetAttributes(ScAddr entity,ScAddr package)
 
     return attrs;
 }
+/// Checks if attribute is marked as derived (calculated from other attributes)
+bool ErDiagramBuilder::IsDerived(ScAddr attr)
+{
+    return context->CheckConnector(Keynodes::concept_derived_attribute, 
+                                    attr,
+                                    ScType::ConstPermPosArc);
+}
 
 /// Recursively processes attribute node with nested children
 /// Adds Chen notation markers:
@@ -81,13 +88,6 @@ std::string ErDiagramBuilder::ProcessAttributeRecursively(ScAddr attr, ScAddr pa
     return result;
 }
 
-/// Checks if attribute is marked as derived (calculated from other attributes)
-bool ErDiagramBuilder::IsDerived(ScAddr attr)
-{
-    return context->CheckConnector(Keynodes::concept_derived_attribute, 
-                                    attr,
-                                    ScType::ConstPermPosArc);
-}
 
 /// Checks if attribute is required key attribute (primary key, uniqueness constraint)
 bool ErDiagramBuilder::IsRequired(ScAddr attr)
@@ -316,7 +316,7 @@ void ErDiagramBuilder::ProcessAdjacentNodes(ScAddr Node, ScAddr package)
             // Extract cardinality constraints and generate connection lines
             ScIterator5Ptr it5=context->CreateIterator5(ScType::ConstNodeClass, ScType::PosArc, relNode, ScType::PosArc, package);
             while (it5->Next()) {
-                std::pair<std::string,std::string> card = ChenCardinality(it5->Get(0));
+                std::pair<std::string,std::string> card = ChenCardinality(it5->Get(0), false);
             // Add first connection (entity1 -> relationship) if left cardinality exists
             if(!card.first.empty()&&entityToRelation.find(Node)==entityToRelation.end()){
                 entityToRelation[Node]=relNode;

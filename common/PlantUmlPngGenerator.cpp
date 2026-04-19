@@ -8,7 +8,6 @@
 #include <sc-memory/sc_type.hpp>
 #include <sc-memory/sc_utils.hpp>
 
-#include <curl/curl.h>
 #include <fstream>
 #include <iostream>
 #include <string>

@@ -1,0 +1,27 @@
+{
+  "tests": 3,
+  "name": "AllTests",
+  "testsuites": [
+    {
+      "name": "ErDiagramAgentTest",
+      "tests": 3,
+      "testsuite": [
+        {
+          "name": "graphWithOnePackage",
+          "file": "\/home\/killrmnv\/University\/ostis-example-app\/problem-solver\/cxx\/plantUML-submodule\/er-diagram-module\/test\/units\/testERDiagramAgent.cpp",
+          "line": 124
+        },
+        {
+          "name": "graphWithInternalPackages",
+          "file": "\/home\/killrmnv\/University\/ostis-example-app\/problem-solver\/cxx\/plantUML-submodule\/er-diagram-module\/test\/units\/testERDiagramAgent.cpp",
+          "line": 133
+        },
+        {
+          "name": "graphWithInternalPackagesAndNonAtomicArgument",
+          "file": "\/home\/killrmnv\/University\/ostis-example-app\/problem-solver\/cxx\/plantUML-submodule\/er-diagram-module\/test\/units\/testERDiagramAgent.cpp",
+          "line": 141
+        }
+      ]
+    }
+  ]
+}

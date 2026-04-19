@@ -6,7 +6,7 @@
 
 #include "ErDiagramAgent.hpp"
 #include "common/PlantUmlPngGenerator.hpp"
-#include "common/ErDiagramBuilder.hpp" 
+#include "../builder/ErDiagramBuilder.hpp" 
 
 
 #include <sc-agents-common/utils/IteratorUtils.hpp>
