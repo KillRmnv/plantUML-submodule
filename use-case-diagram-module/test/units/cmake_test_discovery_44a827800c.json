@@ -1,0 +1,27 @@
+{
+  "tests": 3,
+  "name": "AllTests",
+  "testsuites": [
+    {
+      "name": "UseCaseDiagramAgentTest",
+      "tests": 3,
+      "testsuite": [
+        {
+          "name": "graphWithOnePackage",
+          "file": "\/home\/killrmnv\/University\/ostis-example-app\/problem-solver\/cxx\/plantUML-submodule\/use-case-diagram-module\/test\/units\/testUseCaseDiagramAgent.cpp",
+          "line": 119
+        },
+        {
+          "name": "graphWithInternalPackages",
+          "file": "\/home\/killrmnv\/University\/ostis-example-app\/problem-solver\/cxx\/plantUML-submodule\/use-case-diagram-module\/test\/units\/testUseCaseDiagramAgent.cpp",
+          "line": 128
+        },
+        {
+          "name": "graphWithEdgesBetweenPackages",
+          "file": "\/home\/killrmnv\/University\/ostis-example-app\/problem-solver\/cxx\/plantUML-submodule\/use-case-diagram-module\/test\/units\/testUseCaseDiagramAgent.cpp",
+          "line": 136
+        }
+      ]
+    }
+  ]
+}

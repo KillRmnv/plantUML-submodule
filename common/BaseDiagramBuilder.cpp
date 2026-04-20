@@ -12,17 +12,17 @@ BaseDiagramBuilder::~BaseDiagramBuilder() = default;
 
 void BaseDiagramBuilder::ProcessNode(ScAddr node, ScAddr container)
 {
-    // пусто
+    
 }
 
 void BaseDiagramBuilder::ProcessEdgesByNode(ScAddr node, ScAddr container)
 {
-    // пусто
+    
 }
 
 void BaseDiagramBuilder::ProcessAdjacentNodes(ScAddr node, ScAddr container)
 {
-    // пусто
+    
 }
 
 std::string BaseDiagramBuilder::GetResultString()
