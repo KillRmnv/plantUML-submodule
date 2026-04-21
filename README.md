@@ -19,6 +19,7 @@ This project provides diagram generation modules for the OSTIS (Open Semantic Te
 - C++17 compiler (GCC 7+, Clang 5+, MSVC 2017+)
 - Java runtime for PlantUML generation
 - cmake >= 3.10
+- GraphViz (`sudo apt update && sudo apt install graphviz`)
 
 ## Architecture
 
